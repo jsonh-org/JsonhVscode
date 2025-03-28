@@ -70,8 +70,8 @@
 		},
 		"quoted-string": {
 			"name": "string.quoted.jsonh",
-			"begin": "^(\"|')",
-			"end": "(\\1)",
+			"begin": "^\\s*(\"|')",
+			"end": "(\\1)\\s*$",
 			"beginCaptures": {
 				"0": { "name": "punctuation.definition.string.begin.jsonh" }
 			},
@@ -81,12 +81,12 @@
 			"patterns": [
 				{ "include": "#escape" }
 			],
-			"comment": "start quote -> backreference"
+			"comment": "start (whitespace) quote -> backreference (whitespace) end"
 		},
 		"multi-quoted-string": {
 			"name": "string.quoted.jsonh",
-			"begin": "^((\"|'){3,})",
-			"end": "(\\1)",
+			"begin": "^\\s*((\"|'){3,})",
+			"end": "(\\1)\\s*$",
 			"beginCaptures": {
 				"0": { "name": "punctuation.definition.string.begin.jsonh" }
 			},
@@ -96,12 +96,12 @@
 			"patterns": [
 				{ "include": "#escape" }
 			],
-			"comment": "start quote{3+} -> backreference"
+			"comment": "start (whitespace) quote{3+} -> backreference (whitespace) end"
 		},
 		"quoteless-string": {
 			"name": "string.unquoted.jsonh",
-			"begin": "^[^\\,\\:\\[\\]\\{\\}\\/\\#\\\\\\n\\r\\u2028\\u2029]+",
-			"end": "(?=[\\,\\:\\[\\]\\{\\}\\/\\#\\\\\\n\\r\\u2028\\u2029])",
+			"begin": "^\\s*(?=([^\\\\\\,\\:\\[\\]\\{\\}\\/\\#\\\"\\'\\n\\r\\u2028\\u2029]|(\\\\.)))",
+			"end": "(?!([^\\\\\\,\\:\\[\\]\\{\\}\\/\\#\\\"\\'\\n\\r\\u2028\\u2029]|(\\\\.)))\\s*$",
 			"beginCaptures": {
 				"0": { "name": "punctuation.definition.string.begin.jsonh" }
 			},
@@ -111,7 +111,7 @@
 			"patterns": [
 				{ "include": "#escape" }
 			],
-			"comment": "start not-reserved-or-newline{1+} -> reserved-or-newline"
+			"comment": "start (whitespace) [not-reserved-not-newline, escape]{1+} -> NOT<[not-reserved-not-newline, escape]> (whitespace) end"
 		},
 		"escape": {
 			"patterns": [
