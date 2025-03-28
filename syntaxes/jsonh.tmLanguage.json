@@ -43,23 +43,23 @@
 		},
 		"decimal-number": {
 			"name": "constant.numeric.decimal.jsonh",
-			"match": "^[-+]?((([0-9](_?[0-9])*)(\\.)?(([0-9](_?[0-9])*))?)|(\\.([0-9](_?[0-9])*)))([eE][-+]?((([0-9](_?[0-9])*)(\\.)?(([0-9](_?[0-9])*))?)|(\\.([0-9](_?[0-9])*))))?",
-			"comment": "start (sign) [digits (dot) (digits), dot digits] (exponent (sign) [digits (dot) (digits), dot digits])"
+			"match": "^\\s*[-+]?((([0-9](_?[0-9])*)(\\.)?(([0-9](_?[0-9])*))?)|(\\.([0-9](_?[0-9])*)))([eE][-+]?((([0-9](_?[0-9])*)(\\.)?(([0-9](_?[0-9])*))?)|(\\.([0-9](_?[0-9])*))))?\\s*$",
+			"comment": "start (whitespace) (sign) [digits (dot) (digits), dot digits] (exponent (sign) [digits (dot) (digits), dot digits]) (whitespace) end"
 		},
 		"hexadecimal-number": {
 			"name": "constant.numeric.hexadecimal.jsonh",
-			"match": "^[-+]?0[xX]((([0-9a-fA-F](_?[0-9a-fA-F])*)(\\.)?(([0-9a-fA-F](_?[0-9a-fA-F])*))?)|(\\.([0-9a-fA-F](_?[0-9a-fA-F])*)))([eE][-+]?((([0-9a-fA-F](_?[0-9a-fA-F])*)(\\.)?(([0-9a-fA-F](_?[0-9a-fA-F])*))?)|(\\.([0-9a-fA-F](_?[0-9a-fA-F])*))))?",
-			"comment": "start (sign) (specifier) [digits (dot) (digits), dot digits] (exponent (sign) [digits (dot) (digits), dot digits])"
+			"match": "^\\s*[-+]?0[xX]((([0-9a-fA-F](_?[0-9a-fA-F])*)(\\.)?(([0-9a-fA-F](_?[0-9a-fA-F])*))?)|(\\.([0-9a-fA-F](_?[0-9a-fA-F])*)))([eE][-+]?((([0-9a-fA-F](_?[0-9a-fA-F])*)(\\.)?(([0-9a-fA-F](_?[0-9a-fA-F])*))?)|(\\.([0-9a-fA-F](_?[0-9a-fA-F])*))))?\\s*$",
+			"comment": "start (whitespace) (sign) (specifier) [digits (dot) (digits), dot digits] (exponent (sign) [digits (dot) (digits), dot digits]) (whitespace) end"
 		},
 		"binary-number": {
 			"name": "constant.numeric.binary.jsonh",
-			"match": "^[-+]?0[bB]((([0-1](_?[0-1])*)(\\.)?(([0-1](_?[0-1])*))?)|(\\.([0-1](_?[0-1])*)))([eE][-+]?((([0-1](_?[0-1])*)(\\.)?(([0-1](_?[0-1])*))?)|(\\.([0-1](_?[0-1])*))))?",
-			"comment": "start (sign) (specifier) [digits (dot) (digits), dot digits] (exponent (sign) [digits (dot) (digits), dot digits])"
+			"match": "^\\s*[-+]?0[bB]((([0-1](_?[0-1])*)(\\.)?(([0-1](_?[0-1])*))?)|(\\.([0-1](_?[0-1])*)))([eE][-+]?((([0-1](_?[0-1])*)(\\.)?(([0-1](_?[0-1])*))?)|(\\.([0-1](_?[0-1])*))))?\\s*$",
+			"comment": "start (whitespace) (sign) (specifier) [digits (dot) (digits), dot digits] (exponent (sign) [digits (dot) (digits), dot digits]) (whitespace) end"
 		},
 		"octal-number": {
 			"name": "constant.numeric.octal.jsonh",
-			"match": "^[-+]?0[oO]((([0-7](_?[0-7])*)(\\.)?(([0-7](_?[0-7])*))?)|(\\.([0-7](_?[0-7])*)))([eE][-+]?((([0-7](_?[0-7])*)(\\.)?(([0-7](_?[0-7])*))?)|(\\.([0-7](_?[0-7])*))))?",
-			"comment": "start (sign) (specifier) [digits (dot) (digits), dot digits] (exponent (sign) [digits (dot) (digits), dot digits])"
+			"match": "^\\s*[-+]?0[oO]((([0-7](_?[0-7])*)(\\.)?(([0-7](_?[0-7])*))?)|(\\.([0-7](_?[0-7])*)))([eE][-+]?((([0-7](_?[0-7])*)(\\.)?(([0-7](_?[0-7])*))?)|(\\.([0-7](_?[0-7])*))))?\\s*$",
+			"comment": "start (whitespace) (sign) (specifier) [digits (dot) (digits), dot digits] (exponent (sign) [digits (dot) (digits), dot digits]) (whitespace) end"
 		},
 		"string": {
 			"patterns": [
