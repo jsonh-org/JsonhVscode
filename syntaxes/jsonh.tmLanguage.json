@@ -1,32 +1,143 @@
 {
 	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
 	"name": "JSONH",
+	"scopeName": "source.jsonh",
+	"fileTypes": [ "jsonh" ],
 	"patterns": [
-		{
-			"include": "#keywords"
-		},
-		{
-			"include": "#strings"
-		}
+		{ "include": "#comment" },
+		{ "include": "#element" },
+		{ "include": "#invalid" }
 	],
 	"repository": {
-		"keywords": {
-			"patterns": [{
-				"name": "keyword.control.jsonh",
-				"match": "\\b(if|while|for|return)\\b"
-			}]
-		},
-		"strings": {
-			"name": "string.quoted.double.jsonh",
-			"begin": "\"",
-			"end": "\"",
+		"comment": {
 			"patterns": [
 				{
-					"name": "constant.character.escape.jsonh",
+					"name": "comment.line.jsonh",
+					"begin": "#.*",
+					"end": "\n"
+				},
+				{
+					"name": "comment.line.double-slash.jsonh",
+					"match": "\\/\\/.*"
+				},
+				{
+					"name": "comment.block.jsonh",
+					"begin": "\\/\\*",
+					"end": "\\*\\/"
+				}
+			]
+		},
+		"element": {
+			"patterns": [
+				{ "include": "#number" },
+				{ "include": "#string" }
+			]
+		},
+		"number": {
+			"patterns": [
+				{ "include": "#hexadecimal-number" },
+				{ "include": "#binary-number" },
+				{ "include": "#octal-number" },
+				{ "include": "#decimal-number" }
+			]
+		},
+		"decimal-number": {
+			"name": "constant.numeric.decimal.jsonh",
+			"match": "[-+]?((([0-9](_?[0-9])*)(\\.)?(([0-9](_?[0-9])*))?)|(\\.([0-9](_?[0-9])*)))([eE][-+]?((([0-9](_?[0-9])*)(\\.)?(([0-9](_?[0-9])*))?)|(\\.([0-9](_?[0-9])*))))?",
+			"comment": "English: (sign) [digits (dot) (digits), dot digits] (exponent (sign) [digits (dot) (digits), dot digits])"
+		},
+		"hexadecimal-number": {
+			"name": "constant.numeric.hexadecimal.jsonh",
+			"match": "[-+]?0[xX]((([0-9a-fA-F](_?[0-9a-fA-F])*)(\\.)?(([0-9a-fA-F](_?[0-9a-fA-F])*))?)|(\\.([0-9a-fA-F](_?[0-9a-fA-F])*)))([eE][-+]?((([0-9a-fA-F](_?[0-9a-fA-F])*)(\\.)?(([0-9a-fA-F](_?[0-9a-fA-F])*))?)|(\\.([0-9a-fA-F](_?[0-9a-fA-F])*))))?",
+			"comment": "English: (sign) (specifier) [digits (dot) (digits), dot digits] (exponent (sign) [digits (dot) (digits), dot digits])"
+		},
+		"binary-number": {
+			"name": "constant.numeric.binary.jsonh",
+			"match": "[-+]?0[bB]((([0-1](_?[0-1])*)(\\.)?(([0-1](_?[0-1])*))?)|(\\.([0-1](_?[0-1])*)))([eE][-+]?((([0-1](_?[0-1])*)(\\.)?(([0-1](_?[0-1])*))?)|(\\.([0-1](_?[0-1])*))))?",
+			"comment": "English: (sign) (specifier) [digits (dot) (digits), dot digits] (exponent (sign) [digits (dot) (digits), dot digits])"
+		},
+		"octal-number": {
+			"name": "constant.numeric.octal.jsonh",
+			"match": "[-+]?0[oO]((([0-7](_?[0-7])*)(\\.)?(([0-7](_?[0-7])*))?)|(\\.([0-7](_?[0-7])*)))([eE][-+]?((([0-7](_?[0-7])*)(\\.)?(([0-7](_?[0-7])*))?)|(\\.([0-7](_?[0-7])*))))?",
+			"comment": "English: (sign) (specifier) [digits (dot) (digits), dot digits] (exponent (sign) [digits (dot) (digits), dot digits])"
+		},
+		"string": {
+			"patterns": [
+				{ "include": "#quoted-string" },
+				{ "include": "#multi-quoted-string" },
+				{ "include": "#quoteless-string" }
+			]
+		},
+		"quoted-string": {
+			"name": "string.quoted.jsonh",
+			"begin": "(\"|')",
+			"end": "(\\1)",
+			"beginCaptures": {
+				"0": { "name": "punctuation.definition.string.begin.jsonh" }
+			},
+			"endCaptures": {
+				"0": { "name": "punctuation.definition.string.end.jsonh" }
+			},
+			"patterns": [
+				{ "include": "#escape" }
+			]
+		},
+		"multi-quoted-string": {
+			"name": "string.quoted.jsonh",
+			"begin": "((\"|'){3,})",
+			"end": "(\\1)",
+			"beginCaptures": {
+				"0": { "name": "punctuation.definition.string.begin.jsonh" }
+			},
+			"endCaptures": {
+				"0": { "name": "punctuation.definition.string.end.jsonh" }
+			},
+			"patterns": [
+				{ "include": "#escape" }
+			]
+		},
+		"quoteless-string": {
+			"name": "string.unquoted.jsonh",
+			"begin": "[^\\,\\:\\[\\]\\{\\}\\/\\#\\\\\\n]+",
+			"end": "(?=[\\{\\}\\[\\]\\,\\:])",
+			"beginCaptures": {
+				"0": { "name": "punctuation.definition.string.begin.jsonh" }
+			},
+			"endCaptures": {
+				"0": { "name": "punctuation.definition.string.end.jsonh" }
+			},
+			"patterns": [
+				{ "include": "#escape" }
+			]
+		},
+		"escape": {
+			"patterns": [
+				{
+					"name": "constant.character.escape.newline.jsonh",
+					"begin": "\\\\$",
+					"end": "^"
+				},
+				{
+					"name": "constant.character.escape.utf16.jsonh",
+					"match": "\\\\u[0-9a-fA-F]{4}"
+				},
+				{
+					"name": "constant.character.escape.short-utf16.jsonh",
+					"match": "\\\\x[0-9a-fA-F]{2}"
+				},
+				{
+					"name": "constant.character.escape.utf32.jsonh",
+					"match": "\\\\U[0-9a-fA-F]{8}"
+				},
+				{
+					"name": "constant.character.escape.character.jsonh",
 					"match": "\\\\."
 				}
 			]
+		},
+		"invalid": {
+			"name": "invalid.illegal.jsonh",
+			"match": "."
 		}
-	},
-	"scopeName": "source.jsonh"
+	}
 }

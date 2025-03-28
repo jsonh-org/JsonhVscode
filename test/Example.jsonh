@@ -1,0 +1,49 @@
+"a\ab \
+
+a
+b
+
+"
+
+123
+1.0
+.5e3
+4.e3.
++64e-1.0
+354_246.1_2_3
+0xa1b.5e2
+1_2
+_3.4_7
+a b
+12e.4
+
+{
+    // use #, // or /**/ comments
+    
+    // quotes are optional
+    keys: without quotes,
+
+    // commas are optional
+    isn\'t: {
+        that: cool? # yes
+    }
+
+    // use multiline strings
+    haiku: '''
+        Let me die in spring
+          beneath the cherry blossoms
+            while the moon is full.
+        '''
+    
+    // compatible with JSON5
+    key: 0xDEADCAFE
+
+    // or use JSON
+    "old school": 1337
+
+    
+/*
+banned:
+ ye /* b */
+*/
+}
