@@ -1,5 +1,7 @@
 # JsonhVscode
 
+[![Visual Studio Marketplace](https://img.shields.io/visual-studio-marketplace/i/Joyless.jsonh-vscode)](https://marketplace.visualstudio.com/items?itemName=Joyless.jsonh-vscode)
+
 **JSON for Humans.**
 
 JSON is great. Until you miss that trailing comma... or want to use comments. What about multiline strings?
