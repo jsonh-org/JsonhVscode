@@ -1,3 +1,5 @@
+"y":"5"
+
 \\a\bb\b\b\"
 
 "a\ab \
@@ -57,7 +59,7 @@ aa\n\b
     // use #, // or /**/ comments
     
     // quotes are optional
-    keys: without quotes,
+    keys: "without quotes",
 
     // commas are optional
     isn\'t: {

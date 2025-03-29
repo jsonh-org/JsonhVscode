@@ -3,9 +3,11 @@
 	"name": "JSONH",
 	"scopeName": "source.jsonh",
 	"fileTypes": [ "jsonh" ],
+	"foldingStartMarker": "(?x:^\\s*[{\\[](?!.*[}\\]],?\\s*$)|[{\\[]\\s*$)",
+	"foldingStopMarker": "(?x:^\\s*[}\\]])",
 	"patterns": [
-		{ "include": "#element" },
 		{ "include": "#property" },
+		{ "include": "#element" },
 		{ "include": "#invalid" }
 	],
 	"repository": {
@@ -80,7 +82,7 @@
 			"name": "meta.structure.dictionary.key-value.jsonh",
 			"patterns": [
 				{ "include": "#comment" },
-				{ "include": "#string" },
+				{ "include": "#property-name" },
 				{
 					"name": "meta.structure.dictionary.value.jsonh",
 					"begin": ":",
@@ -181,6 +183,58 @@
 			},
 			"endCaptures": {
 				"0": { "name": "punctuation.definition.string.end.jsonh" }
+			},
+			"patterns": [
+				{ "include": "#escape" }
+			],
+			"comment": "[not-whitespace-not-reserved-not-newline, escape]{1+} -> NOT<[not-whitespace-not-reserved-not-newline, escape]>"
+		},
+		"property-name": {
+			"patterns": [
+				{ "include": "#multi-quoted-property-name" },
+				{ "include": "#quoted-property-name" },
+				{ "include": "#quoteless-property-name" }
+			]
+		},
+		"quoted-property-name": {
+			"name": "string.quoted.jsonh support.type.property-name",
+			"begin": "(\"|')",
+			"end": "(\\1)",
+			"beginCaptures": {
+				"0": { "name": "punctuation.support.type.property-name.begin.jsonh" }
+			},
+			"endCaptures": {
+				"0": { "name": "punctuation.support.type.property-name.end.jsonh" }
+			},
+			"patterns": [
+				{ "include": "#escape" }
+			],
+			"comment": "quote -> backreference"
+		},
+		"multi-quoted-property-name": {
+			"name": "string.quoted.jsonh support.type.property-name",
+			"begin": "((\"|'){3,})",
+			"end": "(\\1)",
+			"beginCaptures": {
+				"0": { "name": "punctuation.support.type.property-name.begin.jsonh" }
+			},
+			"endCaptures": {
+				"0": { "name": "punctuation.support.type.property-name.end.jsonh" }
+			},
+			"patterns": [
+				{ "include": "#escape" }
+			],
+			"comment": "quote{3+} -> backreference"
+		},
+		"quoteless-property-name": {
+			"name": "string.unquoted.jsonh support.type.property-name",
+			"begin": "(?=([^\\s\\\\\\,\\:\\[\\]\\{\\}\\/\\#\\\"\\'\\n\\r\\u2028\\u2029]|(\\\\(.|\\s))))",
+			"end": "(?!([^\\\\\\,\\:\\[\\]\\{\\}\\/\\#\\\"\\'\\n\\r\\u2028\\u2029]|(\\\\(.|\\s))))",
+			"beginCaptures": {
+				"0": { "name": "punctuation.support.type.property-name.begin.jsonh" }
+			},
+			"endCaptures": {
+				"0": { "name": "punctuation.support.type.property-name.end.jsonh" }
 			},
 			"patterns": [
 				{ "include": "#escape" }
