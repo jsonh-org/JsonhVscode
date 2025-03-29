@@ -4,7 +4,6 @@
 	"scopeName": "source.jsonh",
 	"fileTypes": [ "jsonh" ],
 	"patterns": [
-		{ "include": "#comment" },
 		{ "include": "#element" },
 		{ "include": "#invalid" }
 	],
@@ -13,8 +12,7 @@
 			"patterns": [
 				{
 					"name": "comment.line.jsonh",
-					"begin": "#.*",
-					"end": "\n"
+					"match": "\\#.*"
 				},
 				{
 					"name": "comment.line.double-slash.jsonh",
@@ -29,7 +27,9 @@
 		},
 		"element": {
 			"patterns": [
+				{ "include": "#comment" },
 				{ "include": "#array" },
+				{ "include": "#object" },
 				{ "include": "#number" },
 				{ "include": "#string" }
 			]
@@ -45,7 +45,6 @@
 				"0": { "name": "punctuation.definition.array.end.jsonh" }
 			},
 			"patterns": [
-				{ "include": "#comment" },
 				{ "include": "#item" },
 				{ "include": "#invalid" }
 			]
@@ -56,6 +55,48 @@
 				{
 					"name": "punctuation.separator.array.jsonh",
 					"match": "(?<!,),"
+				},
+				{ "include": "#invalid" }
+			]
+		},
+		"object": {
+			"name": "meta.structure.dictionary.jsonh",
+			"begin": "\\{",
+			"end": "\\}",
+			"beginCaptures": {
+				"0": { "name": "punctuation.definition.dictionary.begin.jsonh" }
+			},
+			"endCaptures": {
+				"0": { "name": "punctuation.definition.dictionary.end.jsonh" }
+			},
+			"patterns": [
+				{ "include": "#property" },
+				{ "include": "#invalid" }
+			]
+		},
+		"property": {
+			"name": "meta.structure.dictionary.key-value.jsonh",
+			"patterns": [
+				{ "include": "#comment" },
+				{ "include": "#string" },
+				{
+					"name": "meta.structure.dictionary.value.jsonh",
+					"begin": ":",
+					"end": "[,\\n\\r\\u2028\\u2029]",
+					"beginCaptures": {
+						"0": { "name": "punctuation.separator.dictionary.key-value.jsonh" }
+					},
+					"endCaptures": {
+						"1": { "name": "punctuation.separator.dictionary.pair.jsonh" }
+					},
+					"patterns": [
+						{ "include": "#element" },
+						{
+							"name": "punctuation.separator.dictionary.jsonh",
+							"match": "(?<!,),"
+						},
+						{ "include": "#invalid" }
+					]
 				},
 				{ "include": "#invalid" }
 			]
