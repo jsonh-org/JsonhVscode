@@ -137,8 +137,8 @@
 		},
 		"string": {
 			"patterns": [
-				{ "include": "#quoted-string" },
 				{ "include": "#multi-quoted-string" },
+				{ "include": "#quoted-string" },
 				{ "include": "#quoteless-string" }
 			]
 		},

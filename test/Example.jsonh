@@ -46,8 +46,14 @@ a b
     a: 1,
     b: 2,
 ]
+z:
+""""""
+aa\n\b
+"""
+""""""
 
 {
+    ""
     // use #, // or /**/ comments
     
     // quotes are optional
