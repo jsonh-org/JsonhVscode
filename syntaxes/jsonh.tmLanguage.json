@@ -79,14 +79,13 @@
 			]
 		},
 		"property": {
-			"name": "meta.structure.dictionary.key-value.jsonh",
 			"patterns": [
 				{ "include": "#comment" },
 				{ "include": "#property-name" },
 				{
 					"name": "meta.structure.dictionary.value.jsonh",
 					"begin": ":",
-					"end": "[,\\n\\r\\u2028\\u2029]",
+					"end": ",|(?=^[^:]*:)",
 					"beginCaptures": {
 						"0": { "name": "punctuation.separator.dictionary.key-value.jsonh" }
 					},
