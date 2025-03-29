@@ -5,6 +5,7 @@
 	"fileTypes": [ "jsonh" ],
 	"patterns": [
 		{ "include": "#element" },
+		{ "include": "#property" },
 		{ "include": "#invalid" }
 	],
 	"repository": {
@@ -104,7 +105,7 @@
 		},
 		"named-literal": {
 			"name": "constant.language.jsonh",
-			"match": "\\b(true|false|null)(?!\\s*[^\\s\\,\\[\\]\\{\\}\\/\\#\\\"\\'])"
+			"match": "(true|false|null)(?!\\s*[^\\s\\,\\[\\]\\{\\}\\/\\#\\\"\\'])"
 		},
 		"number": {
 			"patterns": [
@@ -174,7 +175,7 @@
 		"quoteless-string": {
 			"name": "string.unquoted.jsonh",
 			"begin": "(?=([^\\s\\\\\\,\\:\\[\\]\\{\\}\\/\\#\\\"\\'\\n\\r\\u2028\\u2029]|(\\\\(.|\\s))))",
-			"end": "(?!([^\\s\\\\\\,\\:\\[\\]\\{\\}\\/\\#\\\"\\'\\n\\r\\u2028\\u2029]|(\\\\(.|\\s))))",
+			"end": "(?!([^\\\\\\,\\:\\[\\]\\{\\}\\/\\#\\\"\\'\\n\\r\\u2028\\u2029]|(\\\\(.|\\s))))",
 			"beginCaptures": {
 				"0": { "name": "punctuation.definition.string.begin.jsonh" }
 			},

@@ -18,9 +18,11 @@ a\"b\\
 1_2
 _3.4_7
 05
+f 56
 a b
 12e.4
-[ 1]
+ 6
+[ 1, 2 ]
 [
     1,
     [
@@ -36,6 +38,14 @@ a b
  true 6
  false 6
  null 6
+ 6 true
+ 6 false
+ 6 null
+
+[
+    a: 1,
+    b: 2,
+]
 
 {
     // use #, // or /**/ comments
