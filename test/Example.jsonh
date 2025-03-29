@@ -30,6 +30,12 @@ a b
     3,a,
     ,
 ]
+ true
+ false
+ null
+ true 6
+ false 6
+ null 6
 
 {
     // use #, // or /**/ comments

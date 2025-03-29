@@ -30,6 +30,7 @@
 				{ "include": "#comment" },
 				{ "include": "#array" },
 				{ "include": "#object" },
+				{ "include": "#named-literal" },
 				{ "include": "#number" },
 				{ "include": "#string" }
 			]
@@ -100,6 +101,10 @@
 				},
 				{ "include": "#invalid" }
 			]
+		},
+		"named-literal": {
+			"name": "constant.language.jsonh",
+			"match": "\\b(true|false|null)(?!\\s*[^\\s\\,\\[\\]\\{\\}\\/\\#\\\"\\'])"
 		},
 		"number": {
 			"patterns": [
