@@ -29,8 +29,35 @@
 		},
 		"element": {
 			"patterns": [
+				{ "include": "#array" },
 				{ "include": "#number" },
 				{ "include": "#string" }
+			]
+		},
+		"array": {
+			"name": "meta.structure.array.jsonh",
+			"begin": "\\[",
+			"end": "\\]",
+			"beginCaptures": {
+				"0": { "name": "punctuation.definition.array.begin.jsonh" }
+			},
+			"endCaptures": {
+				"0": { "name": "punctuation.definition.array.end.jsonh" }
+			},
+			"patterns": [
+				{ "include": "#comment" },
+				{ "include": "#item" },
+				{ "include": "#invalid" }
+			]
+		},
+		"item": {
+			"patterns": [
+				{ "include": "#element" },
+				{
+					"name": "punctuation.separator.array.jsonh",
+					"match": "(?<!,),"
+				},
+				{ "include": "#invalid" }
 			]
 		},
 		"number": {
@@ -43,23 +70,23 @@
 		},
 		"decimal-number": {
 			"name": "constant.numeric.decimal.jsonh",
-			"match": "^\\s*[-+]?((([0-9](_?[0-9])*)(\\.)?(([0-9](_?[0-9])*))?)|(\\.([0-9](_?[0-9])*)))([eE][-+]?((([0-9](_?[0-9])*)(\\.)?(([0-9](_?[0-9])*))?)|(\\.([0-9](_?[0-9])*))))?\\s*$",
-			"comment": "start (whitespace) (sign) [digits (dot) (digits), dot digits] (exponent (sign) [digits (dot) (digits), dot digits]) (whitespace) end"
+			"match": "[-+]?((([0-9](_?[0-9])*)(\\.)?(([0-9](_?[0-9])*))?)|(\\.([0-9](_?[0-9])*)))([eE][-+]?((([0-9](_?[0-9])*)(\\.)?(([0-9](_?[0-9])*))?)|(\\.([0-9](_?[0-9])*))))?(?!\\s*[^\\s\\,\\:\\[\\]\\{\\}\\/\\#\\\"\\'])",
+			"comment": "(sign) [digits (dot) (digits), dot digits] (exponent (sign) [digits (dot) (digits), dot digits]) NOT<(whitespace) quoteless-string>"
 		},
 		"hexadecimal-number": {
 			"name": "constant.numeric.hexadecimal.jsonh",
-			"match": "^\\s*[-+]?0[xX]((([0-9a-fA-F](_?[0-9a-fA-F])*)(\\.)?(([0-9a-fA-F](_?[0-9a-fA-F])*))?)|(\\.([0-9a-fA-F](_?[0-9a-fA-F])*)))([eE][-+]?((([0-9a-fA-F](_?[0-9a-fA-F])*)(\\.)?(([0-9a-fA-F](_?[0-9a-fA-F])*))?)|(\\.([0-9a-fA-F](_?[0-9a-fA-F])*))))?\\s*$",
-			"comment": "start (whitespace) (sign) (specifier) [digits (dot) (digits), dot digits] (exponent (sign) [digits (dot) (digits), dot digits]) (whitespace) end"
+			"match": "[-+]?0[xX]((([0-9a-fA-F](_?[0-9a-fA-F])*)(\\.)?(([0-9a-fA-F](_?[0-9a-fA-F])*))?)|(\\.([0-9a-fA-F](_?[0-9a-fA-F])*)))([eE][-+]?((([0-9a-fA-F](_?[0-9a-fA-F])*)(\\.)?(([0-9a-fA-F](_?[0-9a-fA-F])*))?)|(\\.([0-9a-fA-F](_?[0-9a-fA-F])*))))?(?!\\s*[^\\s\\,\\:\\[\\]\\{\\}\\/\\#\\\"\\'])",
+			"comment": "(sign) (specifier) [digits (dot) (digits), dot digits] (exponent (sign) [digits (dot) (digits), dot digits]) (whitespace) NOT<(whitespace) quoteless-string>"
 		},
 		"binary-number": {
 			"name": "constant.numeric.binary.jsonh",
-			"match": "^\\s*[-+]?0[bB]((([0-1](_?[0-1])*)(\\.)?(([0-1](_?[0-1])*))?)|(\\.([0-1](_?[0-1])*)))([eE][-+]?((([0-1](_?[0-1])*)(\\.)?(([0-1](_?[0-1])*))?)|(\\.([0-1](_?[0-1])*))))?\\s*$",
-			"comment": "start (whitespace) (sign) (specifier) [digits (dot) (digits), dot digits] (exponent (sign) [digits (dot) (digits), dot digits]) (whitespace) end"
+			"match": "[-+]?0[bB]((([0-1](_?[0-1])*)(\\.)?(([0-1](_?[0-1])*))?)|(\\.([0-1](_?[0-1])*)))([eE][-+]?((([0-1](_?[0-1])*)(\\.)?(([0-1](_?[0-1])*))?)|(\\.([0-1](_?[0-1])*))))?(?!\\s*[^\\s\\,\\:\\[\\]\\{\\}\\/\\#\\\"\\'])",
+			"comment": "(sign) (specifier) [digits (dot) (digits), dot digits] (exponent (sign) [digits (dot) (digits), dot digits]) (whitespace) NOT<(whitespace) quoteless-string>"
 		},
 		"octal-number": {
 			"name": "constant.numeric.octal.jsonh",
-			"match": "^\\s*[-+]?0[oO]((([0-7](_?[0-7])*)(\\.)?(([0-7](_?[0-7])*))?)|(\\.([0-7](_?[0-7])*)))([eE][-+]?((([0-7](_?[0-7])*)(\\.)?(([0-7](_?[0-7])*))?)|(\\.([0-7](_?[0-7])*))))?\\s*$",
-			"comment": "start (whitespace) (sign) (specifier) [digits (dot) (digits), dot digits] (exponent (sign) [digits (dot) (digits), dot digits]) (whitespace) end"
+			"match": "[-+]?0[oO]((([0-7](_?[0-7])*)(\\.)?(([0-7](_?[0-7])*))?)|(\\.([0-7](_?[0-7])*)))([eE][-+]?((([0-7](_?[0-7])*)(\\.)?(([0-7](_?[0-7])*))?)|(\\.([0-7](_?[0-7])*))))?(?!\\s*[^\\s\\,\\:\\[\\]\\{\\}\\/\\#\\\"\\'])",
+			"comment": "(sign) (specifier) [digits (dot) (digits), dot digits] (exponent (sign) [digits (dot) (digits), dot digits]) (whitespace) NOT<(whitespace) quoteless-string>"
 		},
 		"string": {
 			"patterns": [
@@ -70,8 +97,8 @@
 		},
 		"quoted-string": {
 			"name": "string.quoted.jsonh",
-			"begin": "^\\s*(\"|')",
-			"end": "(\\1)\\s*$",
+			"begin": "(\"|')",
+			"end": "(\\1)",
 			"beginCaptures": {
 				"0": { "name": "punctuation.definition.string.begin.jsonh" }
 			},
@@ -81,12 +108,12 @@
 			"patterns": [
 				{ "include": "#escape" }
 			],
-			"comment": "start (whitespace) quote -> backreference (whitespace) end"
+			"comment": "quote -> backreference"
 		},
 		"multi-quoted-string": {
 			"name": "string.quoted.jsonh",
-			"begin": "^\\s*((\"|'){3,})",
-			"end": "(\\1)\\s*$",
+			"begin": "((\"|'){3,})",
+			"end": "(\\1)",
 			"beginCaptures": {
 				"0": { "name": "punctuation.definition.string.begin.jsonh" }
 			},
@@ -96,12 +123,12 @@
 			"patterns": [
 				{ "include": "#escape" }
 			],
-			"comment": "start (whitespace) quote{3+} -> backreference (whitespace) end"
+			"comment": "quote{3+} -> backreference"
 		},
 		"quoteless-string": {
 			"name": "string.unquoted.jsonh",
-			"begin": "^\\s*(?=([^\\\\\\,\\:\\[\\]\\{\\}\\/\\#\\\"\\'\\n\\r\\u2028\\u2029]|(\\\\.)))",
-			"end": "(?!([^\\\\\\,\\:\\[\\]\\{\\}\\/\\#\\\"\\'\\n\\r\\u2028\\u2029]|(\\\\.)))\\s*$",
+			"begin": "(?=([^\\s\\\\\\,\\:\\[\\]\\{\\}\\/\\#\\\"\\'\\n\\r\\u2028\\u2029]|(\\\\(.|\\s))))",
+			"end": "(?!([^\\s\\\\\\,\\:\\[\\]\\{\\}\\/\\#\\\"\\'\\n\\r\\u2028\\u2029]|(\\\\(.|\\s))))",
 			"beginCaptures": {
 				"0": { "name": "punctuation.definition.string.begin.jsonh" }
 			},
@@ -111,7 +138,7 @@
 			"patterns": [
 				{ "include": "#escape" }
 			],
-			"comment": "start (whitespace) [not-reserved-not-newline, escape]{1+} -> NOT<[not-reserved-not-newline, escape]> (whitespace) end"
+			"comment": "[not-whitespace-not-reserved-not-newline, escape]{1+} -> NOT<[not-whitespace-not-reserved-not-newline, escape]>"
 		},
 		"escape": {
 			"patterns": [
@@ -140,7 +167,7 @@
 		},
 		"invalid": {
 			"name": "invalid.illegal.jsonh",
-			"match": "."
+			"match": "[^\\s]"
 		}
 	}
 }
