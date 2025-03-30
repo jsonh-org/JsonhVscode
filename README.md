@@ -23,3 +23,16 @@ In the following example, the string "hello" is incorrectly highlighted as a pro
 ```jsonh
 "hello"
 ```
+
+### Keys with newlines highlighted as invalid after omitted comma
+
+In the following example, the property `"\nc": "d"` is incorrectly rendered as invalid.
+```jsonh
+"a": "b"
+"
+c": "d"
+```
+
+This can be worked around by adding a comma after the first property.
+
+The reason is that property names end at the RegEx `,|(?=^[^:]*:)` meaning a comma or the first line containing a colon.
