@@ -6,8 +6,9 @@
 	"foldingStartMarker": "(?x:^\\s*[{\\[](?!.*[}\\]],?\\s*$)|[{\\[]\\s*$)",
 	"foldingStopMarker": "(?x:^\\s*[}\\]])",
 	"patterns": [
+		{ "include": "#non-string-element" },
 		{ "include": "#property" },
-		{ "include": "#element" },
+		{ "include": "#string" },
 		{ "include": "#invalid" }
 	],
 	"repository": {
@@ -30,12 +31,17 @@
 		},
 		"element": {
 			"patterns": [
+				{ "include": "#non-string-element" },
+				{ "include": "#string" }
+			]
+		},
+		"non-string-element": {
+			"patterns": [
 				{ "include": "#comment" },
 				{ "include": "#array" },
 				{ "include": "#object" },
 				{ "include": "#named-literal" },
-				{ "include": "#number" },
-				{ "include": "#string" }
+				{ "include": "#number" }
 			]
 		},
 		"array": {
