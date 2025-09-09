@@ -1,6 +1,6 @@
 <img src="https://github.com/jsonh-org/Jsonh/blob/main/IconUpscaled.png?raw=true" width=180>
 
-[![Visual Studio Marketplace](https://img.shields.io/visual-studio-marketplace/i/Joyless.jsonh-vscode)](https://marketplace.visualstudio.com/items?itemName=Joyless.jsonh-vscode)
+[![Visual Studio Marketplace](https://img.shields.io/github/release/jsonh-org/JsonhVscode.svg?label=vs%20marketplace)](https://marketplace.visualstudio.com/items?itemName=Joyless.jsonh-vscode)
 
 **JSON for Humans.**
 
