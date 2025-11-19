@@ -26,6 +26,12 @@
         "scopeName": "source.jsonh",
         "path": "./syntaxes/jsonh.tmLanguage.json"
       }
+    ],
+    "snippets": [
+      {
+        "language": "jsonh",
+        "path": "./snippets/jsonh.code-snippets"
+      }
     ]
   }
 }
