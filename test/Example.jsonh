@@ -22,6 +22,10 @@
     // or use JSON
     "old school": 1337
 
+    @a: @b@c
+
+    c: 0@d
+
     /* hello */
     
     /=* b *=/
