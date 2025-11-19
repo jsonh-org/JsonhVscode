@@ -184,7 +184,7 @@
 		},
 		"quoteless-string": {
 			"name": "string.unquoted.jsonh",
-			"begin": "(?<!\\/=*)(?=([^\\s\\\\\\,\\:\\[\\]\\{\\}\\/\\#\\\"\\'\\@\\n\\r\\u2028\\u2029]|(\\\\(.|\\s))))",
+			"begin": "(?=([^\\s\\\\\\,\\:\\[\\]\\{\\}\\/\\#\\\"\\'\\@\\n\\r\\u2028\\u2029]|(\\\\(.|\\s))))",
 			"end": "(?!([^\\\\\\,\\:\\[\\]\\{\\}\\/\\#\\\"\\'\\@\\n\\r\\u2028\\u2029]|(\\\\(.|\\s))))",
 			"beginCaptures": {
 				"0": { "name": "punctuation.definition.string.begin.jsonh" }
@@ -195,7 +195,7 @@
 			"patterns": [
 				{ "include": "#escape" }
 			],
-			"comment": "NOT<nestable block comment> [not-whitespace-not-reserved-not-newline, escape]{1+} -> NOT<[not-whitespace-not-reserved-not-newline, escape]>"
+			"comment": "[not-whitespace-not-reserved-not-newline, escape]{1+} -> NOT<[not-whitespace-not-reserved-not-newline, escape]>"
 		},
 		"verbatim-quoted-string": {
 			"name": "string.quoted.verbatim.jsonh",
@@ -223,7 +223,7 @@
 		},
 		"verbatim-quoteless-string": {
 			"name": "string.unquoted.verbatim.jsonh",
-			"begin": "(?<!\\/=*)\\@(?=([^\\s\\\\\\,\\:\\[\\]\\{\\}\\/\\#\\\"\\'\\@\\n\\r\\u2028\\u2029]|(\\\\(.|\\s))))",
+			"begin": "\\@(?=([^\\s\\\\\\,\\:\\[\\]\\{\\}\\/\\#\\\"\\'\\@\\n\\r\\u2028\\u2029]|(\\\\(.|\\s))))",
 			"end": "(?!([^\\\\\\,\\:\\[\\]\\{\\}\\/\\#\\\"\\'\\@\\n\\r\\u2028\\u2029]|(\\\\(.|\\s))))",
 			"beginCaptures": {
 				"0": { "name": "punctuation.definition.string.begin.jsonh" }
@@ -231,7 +231,7 @@
 			"endCaptures": {
 				"0": { "name": "punctuation.definition.string.end.jsonh" }
 			},
-			"comment": "NOT<nestable block comment> verbatim [not-whitespace-not-reserved-not-newline, escape]{1+} -> NOT<[not-whitespace-not-reserved-not-newline, escape]>"
+			"comment": "verbatim [not-whitespace-not-reserved-not-newline, escape]{1+} -> NOT<[not-whitespace-not-reserved-not-newline, escape]>"
 		},
 		"property-name": {
 			"patterns": [
@@ -275,7 +275,7 @@
 		},
 		"quoteless-property-name": {
 			"name": "string.unquoted.jsonh support.type.property-name",
-			"begin": "(?<!\\/=*)(?=([^\\s\\\\\\,\\:\\[\\]\\{\\}\\/\\#\\\"\\'\\@\\n\\r\\u2028\\u2029]|(\\\\(.|\\s))))",
+			"begin": "(?=([^\\s\\\\\\,\\:\\[\\]\\{\\}\\/\\#\\\"\\'\\@\\n\\r\\u2028\\u2029]|(\\\\(.|\\s))))",
 			"end": "(?!([^\\\\\\,\\:\\[\\]\\{\\}\\/\\#\\\"\\'\\@\\n\\r\\u2028\\u2029]|(\\\\(.|\\s))))",
 			"beginCaptures": {
 				"0": { "name": "punctuation.support.type.property-name.begin.jsonh" }
@@ -286,7 +286,7 @@
 			"patterns": [
 				{ "include": "#escape" }
 			],
-			"comment": "NOT<nestable block comment> [not-whitespace-not-reserved-not-newline, escape]{1+} -> NOT<[not-whitespace-not-reserved-not-newline, escape]>"
+			"comment": "[not-whitespace-not-reserved-not-newline, escape]{1+} -> NOT<[not-whitespace-not-reserved-not-newline, escape]>"
 		},
 		"verbatim-quoted-property-name": {
 			"name": "string.quoted.verbatim.jsonh support.type.property-name",
@@ -314,7 +314,7 @@
 		},
 		"verbatim-quoteless-property-name": {
 			"name": "string.unquoted.verbatim.jsonh support.type.property-name",
-			"begin": "(?<!\\/=*)\\@(?=([^\\s\\\\\\,\\:\\[\\]\\{\\}\\/\\#\\\"\\'\\@\\n\\r\\u2028\\u2029]|(\\\\(.|\\s))))",
+			"begin": "\\@(?=([^\\s\\\\\\,\\:\\[\\]\\{\\}\\/\\#\\\"\\'\\@\\n\\r\\u2028\\u2029]|(\\\\(.|\\s))))",
 			"end": "(?!([^\\\\\\,\\:\\[\\]\\{\\}\\/\\#\\\"\\'\\@\\n\\r\\u2028\\u2029]|(\\\\(.|\\s))))",
 			"beginCaptures": {
 				"0": { "name": "punctuation.support.type.property-name.begin.jsonh" }
@@ -322,7 +322,7 @@
 			"endCaptures": {
 				"0": { "name": "punctuation.support.type.property-name.end.jsonh" }
 			},
-			"comment": "NOT<nestable block comment> verbatim [not-whitespace-not-reserved-not-newline, escape]{1+} -> NOT<[not-whitespace-not-reserved-not-newline, escape]>"
+			"comment": "verbatim [not-whitespace-not-reserved-not-newline, escape]{1+} -> NOT<[not-whitespace-not-reserved-not-newline, escape]>"
 		},
 		"escape": {
 			"patterns": [
