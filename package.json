@@ -4,7 +4,7 @@
   "description": "Syntax highlighter for JSONH in Visual Studio Code",
   "publisher": "Joyless",
   "repository": "https://github.com/jsonh-org/JsonhVscode",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "engines": {
     "vscode": "^1.97.0"
   },
