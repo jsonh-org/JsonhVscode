@@ -18,14 +18,14 @@ import {
 	DocumentDiagnosticParams,
 } from 'vscode-languageserver/node';
 
-import {
-	TextDocument,
-} from 'vscode-languageserver-textdocument';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 
 import JsonhReader = require('jsonh-ts/build/jsonh-reader');
 import JsonhReaderOptions = require('jsonh-ts/build/jsonh-reader-options');
 import JsonhVersion = require('jsonh-ts/build/jsonh-version');
 import Result = require('jsonh-ts/build/result');
+
+import { Ajv } from 'ajv';
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -161,7 +161,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 	let element: Result<unknown> = jsonhReader.parseElement();
 
 	if (element.isError) {
-		const diagnostic: Diagnostic = {
+		const parseErrorDiagnostic: Diagnostic = {
 			severity: DiagnosticSeverity.Error,
 			range: {
 				start: textDocument.positionAt(jsonhReader.charCounter),
@@ -170,8 +170,46 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 			message: `Error: ${element.error.message}`,
 			source: 'JSONH',
 		}
+		diagonistics.push(parseErrorDiagnostic);
+	}
+	else {
+		// Schema
+		if (element.value !== null && typeof element.value === "object" && "$schema" in element.value) {
+			let schemaUri: any = element.value["$schema"];
+			try {
+				if (typeof schemaUri !== "string") {
+					throw new Error("Schema URI must be string");
+				}
 
-		diagonistics.push(diagnostic);
+				let schemaResponse: Response = await fetch(schemaUri);
+				let schemaText: string = await schemaResponse.text();
+				let schemaObject: any = JSON.parse(schemaText);
+
+				let avj = new Ajv();
+
+				let isSchemaValid = await avj.validateSchema(schemaObject, false);
+				if (!isSchemaValid) {
+					throw new Error(`Schema is not valid: ${avj.errorsText()}`);
+				}
+
+				let isValid = avj.validate(schemaObject, element.value);
+				if (!isValid) {
+					throw new Error(`Failed schema validation: ${avj.errorsText()}`);
+				}
+			}
+			catch (error) {
+				const schemaErrorDiagnostic: Diagnostic = {
+					severity: DiagnosticSeverity.Error,
+					range: {
+						start: textDocument.positionAt(0),
+						end: textDocument.positionAt(0),
+					},
+					message: error instanceof Error ? error.message : `${error}`,
+					source: 'JSONH',
+				}
+				diagonistics.push(schemaErrorDiagnostic);
+			}
+		}
 	}
 
 	return diagonistics;
