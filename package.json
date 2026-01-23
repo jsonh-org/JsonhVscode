@@ -43,13 +43,18 @@
     ],
 		"configuration": {
       "type": "object",
-      "title": "Example configuration",
+      "title": "JSONH Configuration",
       "properties": {
-        "jsonhLanguageServer.maxNumberOfProblems": {
+        "jsonhLanguageServer.jsonhVersion": {
           "scope": "resource",
-          "type": "number",
-          "default": 100,
-          "description": "Controls the maximum number of problems produced by the server."
+          "type": "string",
+          "default": "Latest",
+          "enum": [
+            "Latest",
+            "V1",
+            "V2"
+          ],
+          "description": "Sets the JSONH language version."
         }
       }
     }

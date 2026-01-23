@@ -2,6 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const node_1 = require("vscode-languageserver/node");
 const vscode_languageserver_textdocument_1 = require("vscode-languageserver-textdocument");
+const JsonhReader = require("jsonh-ts/build/jsonh-reader");
+const JsonhReaderOptions = require("jsonh-ts/build/jsonh-reader-options");
+const JsonhVersion = require("jsonh-ts/build/jsonh-version");
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
 const connection = (0, node_1.createConnection)(node_1.ProposedFeatures.all);
@@ -9,16 +12,12 @@ const connection = (0, node_1.createConnection)(node_1.ProposedFeatures.all);
 const documents = new node_1.TextDocuments(vscode_languageserver_textdocument_1.TextDocument);
 let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
-let hasDiagnosticRelatedInformationCapability = false;
 connection.onInitialize((params) => {
     const capabilities = params.capabilities;
     // Does the client support the `workspace/configuration` request?
     // If not, we fall back using global settings.
     hasConfigurationCapability = !!(capabilities.workspace && !!capabilities.workspace.configuration);
     hasWorkspaceFolderCapability = !!(capabilities.workspace && !!capabilities.workspace.workspaceFolders);
-    hasDiagnosticRelatedInformationCapability = !!(capabilities.textDocument &&
-        capabilities.textDocument.publishDiagnostics &&
-        capabilities.textDocument.publishDiagnostics.relatedInformation);
     const result = {
         capabilities: {
             textDocumentSync: node_1.TextDocumentSyncKind.Incremental,
@@ -52,10 +51,10 @@ connection.onInitialized(() => {
         });
     }
 });
-// The global settings, used when the `workspace/configuration` request is not supported by the client.
-// Please note that this is not the case when using this server with the client provided in this example
-// but could happen with other clients.
-const defaultSettings = { maxNumberOfProblems: 1000 };
+// The global settings, used when the `workspace/configuration` request is not supported by the client
+const defaultSettings = {
+    jsonhVersion: "Latest",
+};
 let globalSettings = defaultSettings;
 // Cache the settings of all open documents
 const documentSettings = new Map();
@@ -111,46 +110,26 @@ documents.onDidChangeContent(change => {
     validateTextDocument(change.document);
 });
 async function validateTextDocument(textDocument) {
-    // In this simple example we get the settings for every validate run.
     const settings = await getDocumentSettings(textDocument.uri);
-    // The validator creates diagnostics for all uppercase words length 2 and more
-    const text = textDocument.getText();
-    const pattern = /\b[A-Z]{2,}\b/g;
-    let m;
-    let problems = 0;
-    const diagnostics = [];
-    while ((m = pattern.exec(text)) && problems < settings.maxNumberOfProblems) {
-        problems++;
+    const diagonistics = [];
+    let jsonhReader = JsonhReader.fromString(textDocument.getText(), new JsonhReaderOptions({
+        version: JsonhVersion[settings.jsonhVersion],
+        parseSingleElement: true,
+    }));
+    let element = jsonhReader.parseElement();
+    if (element.isError) {
         const diagnostic = {
-            severity: node_1.DiagnosticSeverity.Warning,
+            severity: node_1.DiagnosticSeverity.Error,
             range: {
-                start: textDocument.positionAt(m.index),
-                end: textDocument.positionAt(m.index + m[0].length)
+                start: textDocument.positionAt(jsonhReader.charCounter),
+                end: textDocument.positionAt(jsonhReader.charCounter),
             },
-            message: `${m[0]} is all uppercase.`,
-            source: 'ex'
+            message: `Error: ${element.error.message}`,
+            source: 'JSONH',
         };
-        if (hasDiagnosticRelatedInformationCapability) {
-            diagnostic.relatedInformation = [
-                {
-                    location: {
-                        uri: textDocument.uri,
-                        range: Object.assign({}, diagnostic.range)
-                    },
-                    message: 'Spelling matters'
-                },
-                {
-                    location: {
-                        uri: textDocument.uri,
-                        range: Object.assign({}, diagnostic.range)
-                    },
-                    message: 'Particularly for names'
-                }
-            ];
-        }
-        diagnostics.push(diagnostic);
+        diagonistics.push(diagnostic);
     }
-    return diagnostics;
+    return diagonistics;
 }
 connection.onDidChangeWatchedFiles(_change => {
     // Monitored files have change in VSCode
