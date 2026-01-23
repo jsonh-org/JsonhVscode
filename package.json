@@ -45,6 +45,12 @@
       "type": "object",
       "title": "JSONH Configuration",
       "properties": {
+        "jsonhLanguageServer.enable": {
+          "scope": "resource",
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to enable the JSONH language client."
+        },
         "jsonhLanguageServer.jsonhVersion": {
           "scope": "resource",
           "type": "string",

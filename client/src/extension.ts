@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { workspace, ExtensionContext } from 'vscode';
+import { workspace, ExtensionContext, ConfigurationChangeEvent } from 'vscode';
 
 import {
 	LanguageClient,
@@ -35,6 +35,18 @@ export function activate(context: ExtensionContext) {
 			fileEvents: workspace.createFileSystemWatcher('**/.clientrc')
 		}
 	};
+
+	// Enable/disable language client based on settings
+	workspace.onDidChangeConfiguration((event: ConfigurationChangeEvent) => {
+		if (event.affectsConfiguration('jsonhLanguageServer.enable')) {
+			const isEnabled = workspace.getConfiguration('jsonhLanguageServer').get<boolean>('enable');
+			if (isEnabled) {
+				client.start();
+			} else {
+				client.stop();
+			}
+		}
+	});
 
 	// Create the language client and start the client.
 	client = new LanguageClient(
