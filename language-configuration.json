@@ -1,7 +1,9 @@
 {
     "comments": {
         // Symbol for a single line comment
-        "lineComment": "//",
+        "lineComment": {
+            "comment": "//",
+        },
         // Symbols for starting and ending a block comment
         "blockComment": [ "/*", "*/" ],
     },
