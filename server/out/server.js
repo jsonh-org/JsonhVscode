@@ -45,11 +45,6 @@ connection.onInitialized(() => {
         // Register for all configuration changes.
         connection.client.register(node_1.DidChangeConfigurationNotification.type, undefined);
     }
-    if (hasWorkspaceFolderCapability) {
-        connection.workspace.onDidChangeWorkspaceFolders(_event => {
-            connection.console.log('Workspace folder change event received.');
-        });
-    }
 });
 // The global settings, used when the `workspace/configuration` request is not supported by the client
 const defaultSettings = {
@@ -84,8 +79,8 @@ function getDocumentSettings(resource) {
     return result;
 }
 // Only keep settings for open documents
-documents.onDidClose(e => {
-    documentSettings.delete(e.document.uri);
+documents.onDidClose((event) => {
+    documentSettings.delete(event.document.uri);
 });
 connection.languages.diagnostics.on(async (params) => {
     const document = documents.get(params.textDocument.uri);
@@ -106,7 +101,7 @@ connection.languages.diagnostics.on(async (params) => {
 });
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
-documents.onDidChangeContent(change => {
+documents.onDidChangeContent((change) => {
     validateTextDocument(change.document);
 });
 async function validateTextDocument(textDocument) {
@@ -131,10 +126,6 @@ async function validateTextDocument(textDocument) {
     }
     return diagonistics;
 }
-connection.onDidChangeWatchedFiles(_change => {
-    // Monitored files have change in VSCode
-    connection.console.log('We received a file change event');
-});
 // This handler provides the initial list of the completion items.
 connection.onCompletion((_textDocumentPosition) => {
     // The pass parameter contains the position of the text document in
