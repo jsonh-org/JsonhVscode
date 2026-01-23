@@ -3,14 +3,22 @@
   "displayName": "JsonhVscode",
   "description": "Syntax highlighter for JSONH in Visual Studio Code",
   "publisher": "Joyless",
-  "repository": "https://github.com/jsonh-org/JsonhVscode",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jsonh-org/JsonhVscode"
+  },
   "version": "2.2.0",
   "engines": {
-    "vscode": "^1.97.0"
+    "vscode": "^1.100.0"
   },
   "categories": [
     "Programming Languages"
   ],
+  "main": "./client/out/extension",
+  "scripts": {
+    "compile": "tsc -b",
+    "watch": "tsc -b -w"
+  },
   "contributes": {
     "languages": [
       {
@@ -32,6 +40,22 @@
         "language": "jsonh",
         "path": "./snippets/jsonh.code-snippets"
       }
-    ]
+    ],
+		"configuration": {
+      "type": "object",
+      "title": "Example configuration",
+      "properties": {
+        "jsonhLanguageServer.maxNumberOfProblems": {
+          "scope": "resource",
+          "type": "number",
+          "default": 100,
+          "description": "Controls the maximum number of problems produced by the server."
+        }
+      }
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "typescript": "^5.9.3"
   }
 }

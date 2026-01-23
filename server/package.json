@@ -1,0 +1,14 @@
+{
+	"name": "jsonh-vscode-server",
+	"description": "LSP server for JSONH in Visual Studio Code",
+	"version": "1.0.0",
+	"license": "MIT",
+	"engines": {
+		"node": "*"
+	},
+	"dependencies": {
+		"jsonh-ts": "^2.5.0",
+		"vscode-languageserver": "^9.0.1",
+		"vscode-languageserver-textdocument": "^1.0.11"
+	}
+}

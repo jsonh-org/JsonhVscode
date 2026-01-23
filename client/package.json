@@ -1,0 +1,17 @@
+{
+	"name": "jsonh-vscode-client",
+	"description": "LSP client for JSONH in Visual Studio Code",
+	"version": "1.0.0",
+	"license": "MIT",
+	"engines": {
+		"vscode": "^1.100.0"
+	},
+	"dependencies": {
+		"glob": "^11.0.0",
+		"vscode-languageclient": "^9.0.1"
+	},
+	"devDependencies": {
+		"@types/vscode": "^1.100.0",
+		"@vscode/test-electron": "^2.3.9"
+	}
+}
