@@ -108,138 +108,130 @@ documents.onDidChangeContent((change) => {
 });
 async function validateTextDocument(textDocument) {
     const settings = await getDocumentSettings(textDocument.uri);
-    const diagonistics = [];
-    // Validate parse
-    let parsedElement;
-    {
-        // Create JsonhReader
-        let jsonhReader = JsonhReader.fromString(textDocument.getText(), new JsonhReaderOptions({
-            version: JsonhVersion[settings.jsonhVersion],
-            parseSingleElement: true,
-        }));
-        // Try parse element
-        parsedElement = jsonhReader.parseElement();
-        // Parse error
-        if (parsedElement.isError) {
-            // Report parse error
-            const parseErrorDiagnostic = {
+    const diagnostics = [];
+    // Create JsonhReader
+    let jsonhReader = JsonhReader.fromString(textDocument.getText(), new JsonhReaderOptions({
+        version: JsonhVersion[settings.jsonhVersion],
+        parseSingleElement: true,
+    }));
+    // Track schema
+    let schemaIsCurrentProperty = false;
+    let schemaPropertyNameStartIndex = -1;
+    let schemaPropertyNameEndIndex = -1;
+    let schemaPropertyValue = null;
+    // Track depth
+    let currentDepth = 0;
+    // Get start index of first token after skipping whitespace
+    jsonhReader.hasToken();
+    let startTokenCharCounter = jsonhReader.charCounter;
+    // Read each JsonhToken
+    let readSuccess = true;
+    for (let tokenResult of jsonhReader.readElement()) {
+        // Check read error
+        if (tokenResult.isError) {
+            // Report read error
+            const readErrorDiagnostic = {
                 severity: node_1.DiagnosticSeverity.Error,
                 range: {
-                    start: textDocument.positionAt(jsonhReader.charCounter),
+                    start: textDocument.positionAt(startTokenCharCounter),
                     end: textDocument.positionAt(jsonhReader.charCounter),
                 },
-                message: `Error: ${parsedElement.error.message}`,
+                message: `Error: ${tokenResult.error.message}`,
                 source: 'JSONH',
             };
-            diagonistics.push(parseErrorDiagnostic);
+            diagnostics.push(readErrorDiagnostic);
+            readSuccess = false;
+            break;
         }
-    }
-    // Validate read
-    if (parsedElement.isValue) {
-        // Create JsonhReader
-        let jsonhReader = JsonhReader.fromString(textDocument.getText(), new JsonhReaderOptions({
-            version: JsonhVersion[settings.jsonhVersion],
-            parseSingleElement: true,
-        }));
-        // Track schema
-        let schemaIsCurrentProperty = false;
-        let schemaPropertyNameStartIndex = -1;
-        let schemaPropertyNameEndIndex = -1;
-        let schemaPropertyValue = null;
-        // Track depth
-        let currentDepth = 0;
-        // Get start index of first token after skipping whitespace
-        jsonhReader.hasToken();
-        let startTokenCharCounter = jsonhReader.charCounter;
-        // Read each JsonhToken
-        for (let tokenResult of jsonhReader.readElement()) {
-            // Check read error
-            if (tokenResult.isError) {
-                const parseErrorDiagnostic = {
-                    severity: node_1.DiagnosticSeverity.Error,
-                    range: {
-                        start: textDocument.positionAt(startTokenCharCounter),
-                        end: textDocument.positionAt(jsonhReader.charCounter),
-                    },
-                    message: `Error: ${tokenResult.error.message}`,
-                    source: 'JSONH',
-                };
-                diagonistics.push(parseErrorDiagnostic);
+        switch (tokenResult.value.jsonType) {
+            // Start structure
+            case JsonTokenType.StartObject:
+            case JsonTokenType.StartArray: {
+                currentDepth++;
                 break;
             }
-            switch (tokenResult.value.jsonType) {
-                // Start structure
-                case JsonTokenType.StartObject:
-                case JsonTokenType.StartArray: {
-                    currentDepth++;
-                    break;
-                }
-                // End structure
-                case JsonTokenType.EndObject:
-                case JsonTokenType.EndArray: {
-                    currentDepth--;
-                    break;
-                }
-                // Property name
-                case JsonTokenType.PropertyName: {
-                    if (currentDepth === 1 && tokenResult.value.value === "$schema") {
-                        schemaIsCurrentProperty = true;
-                        schemaPropertyNameStartIndex = startTokenCharCounter;
-                        schemaPropertyNameEndIndex = jsonhReader.charCounter;
-                    }
-                    break;
-                }
-                // Comment
-                case JsonTokenType.Comment: {
-                    break;
-                }
-                // Primitive value
-                case JsonTokenType.Null:
-                case JsonTokenType.True:
-                case JsonTokenType.False:
-                case JsonTokenType.String:
-                case JsonTokenType.Number: {
-                    if (schemaIsCurrentProperty) {
-                        schemaPropertyValue = tokenResult.value;
-                    }
-                    schemaIsCurrentProperty = false;
-                    break;
-                }
+            // End structure
+            case JsonTokenType.EndObject:
+            case JsonTokenType.EndArray: {
+                currentDepth--;
+                break;
             }
-            // Get start index of token after skipping whitespace
-            jsonhReader.hasToken();
-            startTokenCharCounter = jsonhReader.charCounter;
-        }
-        // Validate schema
-        if (schemaPropertyValue !== null) {
-            try {
-                if (schemaPropertyValue.jsonType !== JsonTokenType.String) {
-                    throw new Error("Schema URI must be string");
+            // Property name
+            case JsonTokenType.PropertyName: {
+                if (currentDepth === 1 && tokenResult.value.value === "$schema") {
+                    schemaIsCurrentProperty = true;
+                    schemaPropertyNameStartIndex = startTokenCharCounter;
+                    schemaPropertyNameEndIndex = jsonhReader.charCounter;
                 }
+                break;
+            }
+            // Comment
+            case JsonTokenType.Comment: {
+                break;
+            }
+            // Primitive value
+            case JsonTokenType.Null:
+            case JsonTokenType.True:
+            case JsonTokenType.False:
+            case JsonTokenType.String:
+            case JsonTokenType.Number: {
+                if (schemaIsCurrentProperty) {
+                    schemaPropertyValue = tokenResult.value;
+                }
+                schemaIsCurrentProperty = false;
+                break;
+            }
+        }
+        // Get start index of token after skipping whitespace
+        jsonhReader.hasToken();
+        startTokenCharCounter = jsonhReader.charCounter;
+    }
+    // Validate schema
+    if (readSuccess && schemaPropertyValue !== null) {
+        try {
+            // Ensure schema is string
+            if (schemaPropertyValue.jsonType !== JsonTokenType.String) {
+                throw new Error("Schema URI must be string");
+            }
+            // Fetch schema and parse as object
+            let schemaObject;
+            try {
                 let schemaResponse = await fetch(schemaPropertyValue.value);
                 let schemaText = await schemaResponse.text();
-                let schemaObject = JSON.parse(schemaText);
-                let avj = new ajv_1.Ajv();
-                let isValid = avj.validate(schemaObject, parsedElement.value);
-                if (!isValid) {
-                    throw new Error(`Failed schema validation: ${avj.errorsText()}`);
-                }
+                schemaObject = JSON.parse(schemaText);
             }
             catch (error) {
-                const schemaErrorDiagnostic = {
-                    severity: node_1.DiagnosticSeverity.Warning,
-                    range: {
-                        start: textDocument.positionAt(schemaPropertyNameStartIndex),
-                        end: textDocument.positionAt(schemaPropertyNameEndIndex),
-                    },
-                    message: error instanceof Error ? error.message : `${error}`,
-                    source: 'JSONH',
-                };
-                diagonistics.push(schemaErrorDiagnostic);
+                throw new Error(`Failed to fetch schema: ${error}`);
+            }
+            // Create JsonhReader
+            let jsonhReader = JsonhReader.fromString(textDocument.getText(), new JsonhReaderOptions({
+                version: JsonhVersion[settings.jsonhVersion],
+                parseSingleElement: true,
+            }));
+            // Try parse element from document
+            let parsedElement = jsonhReader.parseElement().value;
+            // Validate element against schena
+            let avj = new ajv_1.Ajv();
+            let isValid = avj.validate(schemaObject, parsedElement);
+            if (!isValid) {
+                throw new Error(`Failed schema validation: ${avj.errorsText()}`);
             }
         }
+        catch (error) {
+            // Report schema error
+            const schemaErrorDiagnostic = {
+                severity: node_1.DiagnosticSeverity.Warning,
+                range: {
+                    start: textDocument.positionAt(schemaPropertyNameStartIndex),
+                    end: textDocument.positionAt(schemaPropertyNameEndIndex),
+                },
+                message: error instanceof Error ? error.message : `${error}`,
+                source: 'JSONH',
+            };
+            diagnostics.push(schemaErrorDiagnostic);
+        }
     }
-    return diagonistics;
+    return diagnostics;
 }
 // This handler provides the initial list of the completion items.
 connection.onCompletion((_textDocumentPosition) => {
