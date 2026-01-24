@@ -27,7 +27,7 @@ JsonhVscode is a syntax highlighter for [JSONH V2](https://github.com/jsonh-org/
 
 ## Dependencies
 
-- [jsonh-org/JsonhTs](https://github.com/jsonh-org/JsonhTs) (v2.5)
+- [jsonh-org/JsonhTs](https://github.com/jsonh-org/JsonhTs) (v2.7)
 - [ajv-validator/ajv](https://github.com/ajv-validator/ajv) (v8.17.1)
 
 ## Known Issues
