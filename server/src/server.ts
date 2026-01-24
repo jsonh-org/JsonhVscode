@@ -25,6 +25,7 @@ import JsonhReaderOptions = require('jsonh-ts/build/jsonh-reader-options');
 import JsonhVersion = require('jsonh-ts/build/jsonh-version');
 import JsonhToken = require('jsonh-ts/build/jsonh-token');
 import JsonTokenType = require('jsonh-ts/build/json-token-type');
+import JsonhNumberParser = require('jsonh-ts/build/jsonh-number-parser');
 import Result = require('jsonh-ts/build/result');
 
 import { Ajv } from 'ajv';
@@ -166,101 +167,236 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 		parseSingleElement: true,
 	}));
 
-	// Track schema
-	let schemaIsCurrentProperty: boolean = false;
-	let schemaPropertyNameStartIndex: number = -1;
-	let schemaPropertyNameEndIndex: number = -1;
-	let schemaPropertyValue: JsonhToken | null = null;
-
-	// Track depth
-	let currentDepth: number = 0;
-
-	// Get start index of first token after skipping whitespace
-	jsonhReader.hasToken();
-	let startTokenCharCounter: number = jsonhReader.charCounter;
-
-	// Read each JsonhToken
-	let readSuccess: boolean = true;
-	for (let tokenResult of jsonhReader.readElement()) {
-		// Check read error
-		if (tokenResult.isError) {
-			// Report read error
-			const readErrorDiagnostic: Diagnostic = {
-				severity: DiagnosticSeverity.Error,
-				range: {
-					start: textDocument.positionAt(startTokenCharCounter),
-					end: textDocument.positionAt(jsonhReader.charCounter),
-				},
-				message: `Error: ${tokenResult.error.message}`,
-				source: 'JSONH',
-			}
-			diagnostics.push(readErrorDiagnostic);
-			readSuccess = false;
-			break;
+	let currentElements: unknown[] = [];
+	let currentPropertyName: string | null = null;
+	let submitElement = function (element: unknown): boolean {
+		// Root value
+		if (currentElements.length === 0) {
+			return true;
 		}
-
-		switch (tokenResult.value.jsonType) {
-			// Start structure
-			case JsonTokenType.StartObject:
-			case JsonTokenType.StartArray: {
-				currentDepth++;
-				break;
-			}
-			// End structure
-			case JsonTokenType.EndObject:
-			case JsonTokenType.EndArray: {
-				currentDepth--;
-				break;
-			}
-			// Property name
-			case JsonTokenType.PropertyName: {
-				if (settings.enableSchemaValidation) {
-					if (currentDepth === 1 && tokenResult.value.value === "$schema") {
-						schemaIsCurrentProperty = true;
-						schemaPropertyNameStartIndex = startTokenCharCounter;
-						schemaPropertyNameEndIndex = jsonhReader.charCounter;
-					}
-				}
-				break;
-			}
-			// Comment
-			case JsonTokenType.Comment: {
-				break;
-			}
-			// Primitive value
-			case JsonTokenType.Null:
-			case JsonTokenType.True:
-			case JsonTokenType.False:
-			case JsonTokenType.String:
-			case JsonTokenType.Number: {
-				if (settings.enableSchemaValidation) {
-					if (schemaIsCurrentProperty) {
-						schemaPropertyValue = tokenResult.value;
-					}
-					schemaIsCurrentProperty = false;
-				}
-				break;
-			}
+		// Array item
+		if (currentPropertyName === null) {
+			(currentElements.at(-1) as any[]).push(element);
+			return false;
 		}
+		// Object property
+		else {
+			(currentElements.at(-1) as any)[currentPropertyName] = element;
+			currentPropertyName = null;
+			return false;
+		}
+	};
+	let startElement = function (element: unknown): void {
+		submitElement(element);
+		currentElements.push(element);
+	};
+	let parseElement = function (): {
+		result?: Result<unknown> | undefined;
+		diagnostic?: Diagnostic | undefined;
+		schemaPropertyValue?: JsonhToken | undefined;
+		schemaPropertyNameRange?: { start: number, end: number } | undefined;
+	} {
+		// Track schema
+		let schemaIsCurrentProperty: boolean = false;
+		let schemaPropertyNameRange: { start: number, end: number } | undefined = undefined;
+		let schemaPropertyValue: JsonhToken | undefined = undefined;
 
-		// Get start index of token after skipping whitespace
+		// Get start index of first token after skipping whitespace
 		jsonhReader.hasToken();
-		startTokenCharCounter = jsonhReader.charCounter;
+		let startTokenCharCounter: number = jsonhReader.charCounter;
+
+		// Read each JsonhToken
+		for (let tokenResult of jsonhReader.readElement()) {
+			// Check read error
+			if (tokenResult.isError) {
+				// Report read error
+				const readErrorDiagnostic: Diagnostic = {
+					severity: DiagnosticSeverity.Error,
+					range: {
+						start: textDocument.positionAt(startTokenCharCounter),
+						end: textDocument.positionAt(jsonhReader.charCounter),
+					},
+					message: `Error: ${tokenResult.error.message}`,
+					source: 'JSONH',
+				}
+				return { diagnostic: readErrorDiagnostic };
+			}
+
+			switch (tokenResult.value.jsonType) {
+				// Null
+				case JsonTokenType.Null: {
+					let element: null = null;
+					if (submitElement(element)) {
+						return { result: Result.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
+					}
+					break;
+				}
+				// True
+				case JsonTokenType.True: {
+					let element: boolean = true;
+					if (submitElement(element)) {
+						return { result: Result.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
+					}
+					break;
+				}
+				// False
+				case JsonTokenType.False: {
+					let element: boolean = false;
+					if (submitElement(element)) {
+						return { result: Result.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
+					}
+					break;
+				}
+				// String
+				case JsonTokenType.String: {
+					let element: string = tokenResult.value.value;
+					if (submitElement(element)) {
+						return { result: Result.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
+					}
+					break;
+				}
+				// Number
+				case JsonTokenType.Number: {
+					let result: Result<number> = JsonhNumberParser.parse(tokenResult.value.value);
+					if (result.isError) {
+						// Report number parse error
+						const numberParseErrorDiagnostic: Diagnostic = {
+							severity: DiagnosticSeverity.Error,
+							range: {
+								start: textDocument.positionAt(startTokenCharCounter),
+								end: textDocument.positionAt(jsonhReader.charCounter),
+							},
+							message: `Error: ${tokenResult.error.message}`,
+							source: 'JSONH',
+						}
+						return { diagnostic: numberParseErrorDiagnostic };
+					}
+					let element: number = result.value;
+					if (submitElement(element)) {
+						return { result: Result.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
+					}
+					break;
+				}
+				// Start Object
+				case JsonTokenType.StartObject: {
+					let element: object = {};
+					startElement(element);
+					break;
+				}
+				// Start Array
+				case JsonTokenType.StartArray: {
+					let element: any[] = [];
+					startElement(element);
+					break;
+				}
+				// End Object/Array
+				case JsonTokenType.EndObject:
+				case JsonTokenType.EndArray: {
+					// Nested element
+					if (currentElements.length > 1) {
+						currentElements.pop();
+					}
+					// Root element
+					else {
+						return { result: Result.fromValue(currentElements.at(-1)), schemaPropertyValue, schemaPropertyNameRange };
+					}
+					break;
+				}
+				// Property Name
+				case JsonTokenType.PropertyName: {
+					currentPropertyName = tokenResult.value.value;
+					break;
+				}
+				// Comment
+				case JsonTokenType.Comment: {
+					break;
+				}
+				// Not Implemented
+				default: {
+					throw new Error("Token type not implemented");
+				}
+			}
+
+			// Schema validation
+			if (settings.enableSchemaValidation) {
+				switch (tokenResult.value.jsonType) {
+					// Property Name
+					case JsonTokenType.PropertyName: {
+						if (currentElements.length === 1 && tokenResult.value.value === "$schema") {
+							schemaIsCurrentProperty = true;
+							schemaPropertyNameRange = { start: startTokenCharCounter, end: jsonhReader.charCounter };
+						}
+						break;
+					}
+					// Primitive value
+					case JsonTokenType.Null:
+					case JsonTokenType.True:
+					case JsonTokenType.False:
+					case JsonTokenType.String:
+					case JsonTokenType.Number: {
+						if (schemaIsCurrentProperty) {
+							schemaPropertyValue = tokenResult.value;
+						}
+						schemaIsCurrentProperty = false;
+						break;
+					}
+				}
+			}
+
+			// Get start index of token after skipping whitespace
+			jsonhReader.hasToken();
+			startTokenCharCounter = jsonhReader.charCounter;
+		}
+
+		// Report end of input
+		const endOfInputDiagnostic: Diagnostic = {
+			severity: DiagnosticSeverity.Error,
+			range: {
+				start: textDocument.positionAt(startTokenCharCounter),
+				end: textDocument.positionAt(jsonhReader.charCounter),
+			},
+			message: "Expected token, got end of input",
+			source: 'JSONH',
+		}
+		return { diagnostic: endOfInputDiagnostic };
+	}
+
+	// Parse element
+	let parseResult = parseElement();
+	// Ensure exactly one element
+	if (jsonhReader.options.parseSingleElement) {
+		for (let token of jsonhReader.readEndOfElements()) {
+			if (token.isError) {
+				parseResult.diagnostic = {
+					severity: DiagnosticSeverity.Error,
+					range: {
+						start: textDocument.positionAt(jsonhReader.charCounter),
+						end: textDocument.positionAt(jsonhReader.charCounter),
+					},
+					message: `Error: ${token.error.message}`,
+					source: 'JSONH',
+				} as Diagnostic;
+			}
+		}
+	}
+	// Check error
+	if (parseResult.diagnostic !== undefined) {
+		diagnostics.push(parseResult.diagnostic);
 	}
 
 	// Validate schema
 	if (settings.enableSchemaValidation) {
-		if (readSuccess && schemaPropertyValue !== null) {
+		if (parseResult.result !== undefined && parseResult.schemaPropertyValue !== undefined && parseResult.schemaPropertyNameRange !== undefined) {
 			try {
 				// Ensure schema is string
-				if (schemaPropertyValue.jsonType !== JsonTokenType.String) {
+				if (parseResult.schemaPropertyValue.jsonType !== JsonTokenType.String) {
 					throw new Error("Schema URI must be string");
 				}
 
 				// Fetch schema and parse as object
 				let schemaObject: any;
 				try {
-					let schemaResponse: Response = await fetch(schemaPropertyValue.value);
+					let schemaResponse: Response = await fetch(parseResult.schemaPropertyValue.value);
 					let schemaText: string = await schemaResponse.text();
 					schemaObject = JSON.parse(schemaText);
 				}
@@ -268,17 +404,9 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 					throw new Error(`Failed to fetch schema: ${error}`);
 				}
 
-				// Create JsonhReader
-				let jsonhReader: JsonhReader = JsonhReader.fromString(textDocument.getText(), new JsonhReaderOptions({
-					version: JsonhVersion[settings.jsonhVersion as keyof typeof JsonhVersion],
-					parseSingleElement: true,
-				}));
-				// Try parse element from document
-				let parsedElement: unknown = jsonhReader.parseElement().value;
-
 				// Validate element against schena
 				let avj = new Ajv();
-				let isValid = avj.validate(schemaObject, parsedElement);
+				let isValid = avj.validate(schemaObject, parseResult.result.value);
 				if (!isValid) {
 					throw new Error(`Failed schema validation: ${avj.errorsText()}`);
 				}
@@ -288,8 +416,8 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 				const schemaErrorDiagnostic: Diagnostic = {
 					severity: DiagnosticSeverity.Warning,
 					range: {
-						start: textDocument.positionAt(schemaPropertyNameStartIndex),
-						end: textDocument.positionAt(schemaPropertyNameEndIndex),
+						start: textDocument.positionAt(parseResult.schemaPropertyNameRange.start),
+						end: textDocument.positionAt(parseResult.schemaPropertyNameRange.end),
 					},
 					message: error instanceof Error ? error.message : `${error}`,
 					source: 'JSONH',
