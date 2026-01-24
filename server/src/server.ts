@@ -85,15 +85,17 @@ connection.onInitialized(() => {
 // The example settings
 interface JsonhLspSettings {
 	enable: boolean;
-	enableSchemaValidation: boolean;
 	jsonhVersion: string;
+	enableSchemaValidation: boolean;
+	checkDuplicateProperties: boolean;
 }
 
 // The global settings, used when the `workspace/configuration` request is not supported by the client
 const defaultSettings: JsonhLspSettings = {
 	enable: true,
-	enableSchemaValidation: false,
 	jsonhVersion: "Latest",
+	enableSchemaValidation: false,
+	checkDuplicateProperties: true,
 };
 let globalSettings: JsonhLspSettings = defaultSettings;
 
@@ -167,6 +169,11 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 		parseSingleElement: true,
 	}));
 
+	// Get start index of first token after skipping whitespace
+	jsonhReader.hasToken();
+	let startTokenCharCounter: number = jsonhReader.charCounter;
+
+	// Parse methods
 	let currentElements: unknown[] = [];
 	let currentPropertyName: string | null = null;
 	let submitElement = function (element: unknown): boolean {
@@ -176,12 +183,14 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 		}
 		// Array item
 		if (currentPropertyName === null) {
-			(currentElements.at(-1) as any[]).push(element);
+			let array: any[] = currentElements.at(-1) as any[];
+			array.push(element);
 			return false;
 		}
 		// Object property
 		else {
-			(currentElements.at(-1) as any)[currentPropertyName] = element;
+			let object: any = currentElements.at(-1) as any;
+			object[currentPropertyName] = element;
 			currentPropertyName = null;
 			return false;
 		}
@@ -191,8 +200,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 		currentElements.push(element);
 	};
 	let parseElement = function (): {
-		result?: Result<unknown> | undefined;
-		diagnostic?: Diagnostic | undefined;
+		result: Result<unknown>;
 		schemaPropertyValue?: JsonhToken | undefined;
 		schemaPropertyNameRange?: { start: number, end: number } | undefined;
 	} {
@@ -200,10 +208,6 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 		let schemaIsCurrentProperty: boolean = false;
 		let schemaPropertyNameRange: { start: number, end: number } | undefined = undefined;
 		let schemaPropertyValue: JsonhToken | undefined = undefined;
-
-		// Get start index of first token after skipping whitespace
-		jsonhReader.hasToken();
-		let startTokenCharCounter: number = jsonhReader.charCounter;
 
 		// Read each JsonhToken
 		for (let tokenResult of jsonhReader.readElement()) {
@@ -219,7 +223,8 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 					message: `Error: ${tokenResult.error.message}`,
 					source: 'JSONH',
 				}
-				return { diagnostic: readErrorDiagnostic };
+				diagnostics.push(readErrorDiagnostic);
+				return { result: Result.fromError(new Error()) };
 			}
 
 			switch (tokenResult.value.jsonType) {
@@ -269,7 +274,8 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 							message: `Error: ${tokenResult.error.message}`,
 							source: 'JSONH',
 						}
-						return { diagnostic: numberParseErrorDiagnostic };
+						diagnostics.push(numberParseErrorDiagnostic);
+						return { result: Result.fromError(new Error()) };
 					}
 					let element: number = result.value;
 					if (submitElement(element)) {
@@ -343,13 +349,34 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 				}
 			}
 
+			// Check duplicate property name
+			if (settings.checkDuplicateProperties) {
+				switch (tokenResult.value.jsonType) {
+					case JsonTokenType.PropertyName: {
+						let object: any = currentElements.at(-1) as any;
+						if (Object.hasOwn(object, tokenResult.value.value)) {
+							const duplicatePropertyDiagnostic: Diagnostic = {
+								severity: DiagnosticSeverity.Warning,
+								range: {
+									start: textDocument.positionAt(startTokenCharCounter),
+									end: textDocument.positionAt(jsonhReader.charCounter),
+								},
+								message: `Duplicate property - original will be replaced`,
+								source: 'JSONH',
+							}
+							diagnostics.push(duplicatePropertyDiagnostic);
+						}
+					}
+				}
+			}
+
 			// Get start index of token after skipping whitespace
 			jsonhReader.hasToken();
 			startTokenCharCounter = jsonhReader.charCounter;
 		}
 
 		// Report end of input
-		const endOfInputDiagnostic: Diagnostic = {
+		const endOfInputErrorDiagnostic: Diagnostic = {
 			severity: DiagnosticSeverity.Error,
 			range: {
 				start: textDocument.positionAt(startTokenCharCounter),
@@ -358,7 +385,8 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 			message: "Expected token, got end of input",
 			source: 'JSONH',
 		}
-		return { diagnostic: endOfInputDiagnostic };
+		diagnostics.push(endOfInputErrorDiagnostic);
+		return { result: Result.fromError(new Error()) };
 	}
 
 	// Parse element
@@ -367,7 +395,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 	if (jsonhReader.options.parseSingleElement) {
 		for (let token of jsonhReader.readEndOfElements()) {
 			if (token.isError) {
-				parseResult.diagnostic = {
+				const endOfElementsErrorDiagnostic: Diagnostic = {
 					severity: DiagnosticSeverity.Error,
 					range: {
 						start: textDocument.positionAt(jsonhReader.charCounter),
@@ -375,18 +403,16 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 					},
 					message: `Error: ${token.error.message}`,
 					source: 'JSONH',
-				} as Diagnostic;
+				}
+				diagnostics.push(endOfElementsErrorDiagnostic);
+				parseResult.result = Result.fromError(new Error());
 			}
 		}
-	}
-	// Check error
-	if (parseResult.diagnostic !== undefined) {
-		diagnostics.push(parseResult.diagnostic);
 	}
 
 	// Validate schema
 	if (settings.enableSchemaValidation) {
-		if (parseResult.result !== undefined && parseResult.schemaPropertyValue !== undefined && parseResult.schemaPropertyNameRange !== undefined) {
+		if (parseResult.result.isValue && parseResult.schemaPropertyValue !== undefined && parseResult.schemaPropertyNameRange !== undefined) {
 			try {
 				// Ensure schema is string
 				if (parseResult.schemaPropertyValue.jsonType !== JsonTokenType.String) {

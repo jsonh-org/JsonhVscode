@@ -1,4 +1,5 @@
 {
-    "$schema": "https://raw.githubusercontent.com/springframeworkguru/mb2g-json-schema/refs/heads/master/src/main/resources/schema/shipping.address.json"
-
+    "a": "b",
+    "c": "d",
+    "a": "b"
 }
