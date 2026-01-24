@@ -54,8 +54,8 @@
         "jsonhLanguageServer.enableSchemaValidation": {
           "scope": "resource",
           "type": "boolean",
-          "default": true,
-          "description": "Whether to enable JSON schema validation."
+          "default": false,
+          "description": "Whether to enable JSON schema validation with a \"$schema\" property."
         },
         "jsonhLanguageServer.jsonhVersion": {
           "scope": "resource",

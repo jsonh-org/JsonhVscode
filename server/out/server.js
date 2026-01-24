@@ -51,7 +51,7 @@ connection.onInitialized(() => {
 // The global settings, used when the `workspace/configuration` request is not supported by the client
 const defaultSettings = {
     enable: true,
-    enableSchemaValidation: true,
+    enableSchemaValidation: false,
     jsonhVersion: "Latest",
 };
 let globalSettings = defaultSettings;

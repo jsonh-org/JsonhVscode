@@ -91,7 +91,7 @@ interface JsonhLspSettings {
 // The global settings, used when the `workspace/configuration` request is not supported by the client
 const defaultSettings: JsonhLspSettings = {
 	enable: true,
-	enableSchemaValidation: true,
+	enableSchemaValidation: false,
 	jsonhVersion: "Latest",
 };
 let globalSettings: JsonhLspSettings = defaultSettings;
