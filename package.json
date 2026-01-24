@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/jsonh-org/JsonhVscode"
   },
-  "version": "2.2.0",
+  "version": "3.0.0",
   "engines": {
     "vscode": "^1.100.0"
   },
