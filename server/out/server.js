@@ -5,6 +5,7 @@ const vscode_languageserver_textdocument_1 = require("vscode-languageserver-text
 const JsonhReader = require("jsonh-ts/build/jsonh-reader");
 const JsonhReaderOptions = require("jsonh-ts/build/jsonh-reader-options");
 const JsonhVersion = require("jsonh-ts/build/jsonh-version");
+const JsonTokenType = require("jsonh-ts/build/json-token-type");
 const ajv_1 = require("ajv");
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -108,50 +109,128 @@ documents.onDidChangeContent((change) => {
 async function validateTextDocument(textDocument) {
     const settings = await getDocumentSettings(textDocument.uri);
     const diagonistics = [];
-    let jsonhReader = JsonhReader.fromString(textDocument.getText(), new JsonhReaderOptions({
-        version: JsonhVersion[settings.jsonhVersion],
-        parseSingleElement: true,
-    }));
-    let element = jsonhReader.parseElement();
-    if (element.isError) {
-        const parseErrorDiagnostic = {
-            severity: node_1.DiagnosticSeverity.Error,
-            range: {
-                start: textDocument.positionAt(jsonhReader.charCounter),
-                end: textDocument.positionAt(jsonhReader.charCounter),
-            },
-            message: `Error: ${element.error.message}`,
-            source: 'JSONH',
-        };
-        diagonistics.push(parseErrorDiagnostic);
+    // Validate parse
+    let parsedElement;
+    {
+        // Create JsonhReader
+        let jsonhReader = JsonhReader.fromString(textDocument.getText(), new JsonhReaderOptions({
+            version: JsonhVersion[settings.jsonhVersion],
+            parseSingleElement: true,
+        }));
+        // Try parse element
+        parsedElement = jsonhReader.parseElement();
+        // Parse error
+        if (parsedElement.isError) {
+            // Report parse error
+            const parseErrorDiagnostic = {
+                severity: node_1.DiagnosticSeverity.Error,
+                range: {
+                    start: textDocument.positionAt(jsonhReader.charCounter),
+                    end: textDocument.positionAt(jsonhReader.charCounter),
+                },
+                message: `Error: ${parsedElement.error.message}`,
+                source: 'JSONH',
+            };
+            diagonistics.push(parseErrorDiagnostic);
+        }
     }
-    else {
-        // Schema
-        if (element.value !== null && typeof element.value === "object" && "$schema" in element.value) {
-            let schemaUri = element.value["$schema"];
+    // Validate read
+    if (parsedElement.isValue) {
+        // Create JsonhReader
+        let jsonhReader = JsonhReader.fromString(textDocument.getText(), new JsonhReaderOptions({
+            version: JsonhVersion[settings.jsonhVersion],
+            parseSingleElement: true,
+        }));
+        // Track schema
+        let schemaIsCurrentProperty = false;
+        let schemaPropertyNameStartIndex = -1;
+        let schemaPropertyNameEndIndex = -1;
+        let schemaPropertyValue = null;
+        // Track depth
+        let currentDepth = 0;
+        // Get start index of first token after skipping whitespace
+        jsonhReader.hasToken();
+        let startTokenCharCounter = jsonhReader.charCounter;
+        // Read each JsonhToken
+        for (let tokenResult of jsonhReader.readElement()) {
+            // Check read error
+            if (tokenResult.isError) {
+                const parseErrorDiagnostic = {
+                    severity: node_1.DiagnosticSeverity.Error,
+                    range: {
+                        start: textDocument.positionAt(startTokenCharCounter),
+                        end: textDocument.positionAt(jsonhReader.charCounter),
+                    },
+                    message: `Error: ${tokenResult.error.message}`,
+                    source: 'JSONH',
+                };
+                diagonistics.push(parseErrorDiagnostic);
+                break;
+            }
+            switch (tokenResult.value.jsonType) {
+                // Start structure
+                case JsonTokenType.StartObject:
+                case JsonTokenType.StartArray: {
+                    currentDepth++;
+                    break;
+                }
+                // End structure
+                case JsonTokenType.EndObject:
+                case JsonTokenType.EndArray: {
+                    currentDepth--;
+                    break;
+                }
+                // Property name
+                case JsonTokenType.PropertyName: {
+                    if (currentDepth === 1 && tokenResult.value.value === "$schema") {
+                        schemaIsCurrentProperty = true;
+                        schemaPropertyNameStartIndex = startTokenCharCounter;
+                        schemaPropertyNameEndIndex = jsonhReader.charCounter;
+                    }
+                    break;
+                }
+                // Comment
+                case JsonTokenType.Comment: {
+                    break;
+                }
+                // Primitive value
+                case JsonTokenType.Null:
+                case JsonTokenType.True:
+                case JsonTokenType.False:
+                case JsonTokenType.String:
+                case JsonTokenType.Number: {
+                    if (schemaIsCurrentProperty) {
+                        schemaPropertyValue = tokenResult.value;
+                    }
+                    schemaIsCurrentProperty = false;
+                    break;
+                }
+            }
+            // Get start index of token after skipping whitespace
+            jsonhReader.hasToken();
+            startTokenCharCounter = jsonhReader.charCounter;
+        }
+        // Validate schema
+        if (schemaPropertyValue !== null) {
             try {
-                if (typeof schemaUri !== "string") {
+                if (schemaPropertyValue.jsonType !== JsonTokenType.String) {
                     throw new Error("Schema URI must be string");
                 }
-                let schemaResponse = await fetch(schemaUri);
+                let schemaResponse = await fetch(schemaPropertyValue.value);
                 let schemaText = await schemaResponse.text();
                 let schemaObject = JSON.parse(schemaText);
                 let avj = new ajv_1.Ajv();
-                let isSchemaValid = await avj.validateSchema(schemaObject, false);
-                if (!isSchemaValid) {
-                    throw new Error(`Schema is not valid: ${avj.errorsText()}`);
-                }
-                let isValid = avj.validate(schemaObject, element.value);
+                let isValid = avj.validate(schemaObject, parsedElement.value);
                 if (!isValid) {
                     throw new Error(`Failed schema validation: ${avj.errorsText()}`);
                 }
             }
             catch (error) {
                 const schemaErrorDiagnostic = {
-                    severity: node_1.DiagnosticSeverity.Error,
+                    severity: node_1.DiagnosticSeverity.Warning,
                     range: {
-                        start: textDocument.positionAt(0),
-                        end: textDocument.positionAt(0),
+                        start: textDocument.positionAt(schemaPropertyNameStartIndex),
+                        end: textDocument.positionAt(schemaPropertyNameEndIndex),
                     },
                     message: error instanceof Error ? error.message : `${error}`,
                     source: 'JSONH',
