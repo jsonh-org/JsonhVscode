@@ -51,6 +51,12 @@
           "default": true,
           "description": "Whether to enable the JSONH language client."
         },
+        "jsonhLanguageServer.enableSchemaValidation": {
+          "scope": "resource",
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to enable JSON schema validation."
+        },
         "jsonhLanguageServer.jsonhVersion": {
           "scope": "resource",
           "type": "string",
