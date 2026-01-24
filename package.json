@@ -3,14 +3,22 @@
   "displayName": "JsonhVscode",
   "description": "Syntax highlighter for JSONH in Visual Studio Code",
   "publisher": "Joyless",
-  "repository": "https://github.com/jsonh-org/JsonhVscode",
-  "version": "2.2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jsonh-org/JsonhVscode"
+  },
+  "version": "3.0.0",
   "engines": {
-    "vscode": "^1.97.0"
+    "vscode": "^1.100.0"
   },
   "categories": [
     "Programming Languages"
   ],
+  "main": "./client/out/extension",
+  "scripts": {
+    "compile": "tsc -b",
+    "watch": "tsc -b -w"
+  },
   "contributes": {
     "languages": [
       {
@@ -32,6 +40,45 @@
         "language": "jsonh",
         "path": "./snippets/jsonh.code-snippets"
       }
-    ]
+    ],
+		"configuration": {
+      "type": "object",
+      "title": "JSONH Configuration",
+      "properties": {
+        "jsonhLanguageServer.enable": {
+          "scope": "resource",
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to enable the JSONH language client."
+        },
+        "jsonhLanguageServer.jsonhVersion": {
+          "scope": "resource",
+          "type": "string",
+          "default": "Latest",
+          "enum": [
+            "Latest",
+            "V1",
+            "V2"
+          ],
+          "description": "Sets the JSONH language version."
+        },
+        "jsonhLanguageServer.enableSchemaValidation": {
+          "scope": "resource",
+          "type": "boolean",
+          "default": false,
+          "description": "Whether to enable JSON schema validation with a \"$schema\" property."
+        },
+        "jsonhLanguageServer.checkDuplicateProperties": {
+          "scope": "resource",
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to enable duplicate property warnings."
+        }
+      }
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "typescript": "^5.9.3"
   }
 }

@@ -11,11 +11,24 @@ Since JSONH is compatible with JSON, any JSONH syntax can be represented with eq
 
 ## JsonhVscode
 
-JsonhVscode is a syntax highlighter for [JSONH V2](https://github.com/jsonh-org/Jsonh) using TextMate Grammars.
+JsonhVscode is a syntax highlighter for [JSONH V2](https://github.com/jsonh-org/Jsonh) using TextMate Grammars and [JsonhTs](https://github.com/jsonh-org/JsonhTs).
 
 ## Example
 
 <img src="https://github.com/jsonh-org/JsonhVscode/blob/main/Example.png?raw=true"/>
+
+## Features
+
+- JSONH syntax highlighter
+- JSONH language server:
+  - Displays errors with error messages
+  - Displays warnings for duplicate properties
+  - Displays warnings for invalid schema according to `$schema` property
+
+## Dependencies
+
+- [jsonh-org/JsonhTs](https://github.com/jsonh-org/JsonhTs) (v2.5)
+- [ajv-validator/ajv](https://github.com/ajv-validator/ajv) (v8.17.1)
 
 ## Known Issues
 
