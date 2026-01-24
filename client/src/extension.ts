@@ -36,6 +36,14 @@ export function activate(context: ExtensionContext) {
 		}
 	};
 
+	// Create the language client and start the client.
+	client = new LanguageClient(
+		'jsonhLanguageServer',
+		"JSONH Language Server",
+		serverOptions,
+		clientOptions
+	);
+
 	// Enable/disable language client based on settings
 	workspace.onDidChangeConfiguration((event: ConfigurationChangeEvent) => {
 		if (event.affectsConfiguration('jsonhLanguageServer.enable')) {
@@ -47,14 +55,6 @@ export function activate(context: ExtensionContext) {
 			}
 		}
 	});
-
-	// Create the language client and start the client.
-	client = new LanguageClient(
-		'jsonhLanguageServer',
-		"JSONH Language Server",
-		serverOptions,
-		clientOptions
-	);
 
 	// Start the client. This will also launch the server
 	const isEnabled = workspace.getConfiguration('jsonhLanguageServer').get<boolean>('enable');

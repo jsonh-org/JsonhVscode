@@ -27,6 +27,8 @@ function activate(context) {
             fileEvents: vscode_1.workspace.createFileSystemWatcher('**/.clientrc')
         }
     };
+    // Create the language client and start the client.
+    client = new node_1.LanguageClient('jsonhLanguageServer', "JSONH Language Server", serverOptions, clientOptions);
     // Enable/disable language client based on settings
     vscode_1.workspace.onDidChangeConfiguration((event) => {
         if (event.affectsConfiguration('jsonhLanguageServer.enable')) {
@@ -39,8 +41,6 @@ function activate(context) {
             }
         }
     });
-    // Create the language client and start the client.
-    client = new node_1.LanguageClient('jsonhLanguageServer', "JSONH Language Server", serverOptions, clientOptions);
     // Start the client. This will also launch the server
     const isEnabled = vscode_1.workspace.getConfiguration('jsonhLanguageServer').get('enable');
     if (isEnabled) {
