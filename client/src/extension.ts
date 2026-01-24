@@ -57,7 +57,10 @@ export function activate(context: ExtensionContext) {
 	);
 
 	// Start the client. This will also launch the server
-	client.start();
+	const isEnabled = workspace.getConfiguration('jsonhLanguageServer').get<boolean>('enable');
+	if (isEnabled) {
+		client.start();
+	}
 }
 
 export function deactivate(): Thenable<void> | undefined {

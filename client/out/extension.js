@@ -42,7 +42,10 @@ function activate(context) {
     // Create the language client and start the client.
     client = new node_1.LanguageClient('jsonhLanguageServer', "JSONH Language Server", serverOptions, clientOptions);
     // Start the client. This will also launch the server
-    client.start();
+    const isEnabled = vscode_1.workspace.getConfiguration('jsonhLanguageServer').get('enable');
+    if (isEnabled) {
+        client.start();
+    }
 }
 function deactivate() {
     if (!client) {
