@@ -22,13 +22,13 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 
 import { promises as fs } from 'fs';
 
-import JsonhReader = require('jsonh-ts/build/jsonh-reader');
-import JsonhReaderOptions = require('jsonh-ts/build/jsonh-reader-options');
-import JsonhVersion = require('jsonh-ts/build/jsonh-version');
-import JsonhToken = require('jsonh-ts/build/jsonh-token');
-import JsonTokenType = require('jsonh-ts/build/json-token-type');
-import JsonhNumberParser = require('jsonh-ts/build/jsonh-number-parser');
-import Result = require('jsonh-ts/build/result');
+import JsonhReader from 'jsonh-ts/build/jsonh-reader';
+import JsonhReaderOptions from 'jsonh-ts/build/jsonh-reader-options';
+import JsonhVersion from 'jsonh-ts/build/jsonh-version';
+import JsonhToken from 'jsonh-ts/build/jsonh-token';
+import JsonTokenType from 'jsonh-ts/build/json-token-type';
+import JsonhNumberParser from 'jsonh-ts/build/jsonh-number-parser';
+import Result from 'jsonh-ts/build/result';
 
 import { Ajv } from 'ajv';
 

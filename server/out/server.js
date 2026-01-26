@@ -1,14 +1,17 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const node_1 = require("vscode-languageserver/node");
 const vscode_languageserver_textdocument_1 = require("vscode-languageserver-textdocument");
 const fs_1 = require("fs");
-const JsonhReader = require("jsonh-ts/build/jsonh-reader");
-const JsonhReaderOptions = require("jsonh-ts/build/jsonh-reader-options");
-const JsonhVersion = require("jsonh-ts/build/jsonh-version");
-const JsonTokenType = require("jsonh-ts/build/json-token-type");
-const JsonhNumberParser = require("jsonh-ts/build/jsonh-number-parser");
-const Result = require("jsonh-ts/build/result");
+const jsonh_reader_1 = __importDefault(require("jsonh-ts/build/jsonh-reader"));
+const jsonh_reader_options_1 = __importDefault(require("jsonh-ts/build/jsonh-reader-options"));
+const jsonh_version_1 = __importDefault(require("jsonh-ts/build/jsonh-version"));
+const json_token_type_1 = __importDefault(require("jsonh-ts/build/json-token-type"));
+const jsonh_number_parser_1 = __importDefault(require("jsonh-ts/build/jsonh-number-parser"));
+const result_1 = __importDefault(require("jsonh-ts/build/result"));
 const ajv_1 = require("ajv");
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -116,8 +119,8 @@ async function validateTextDocument(textDocument) {
     const settings = await getDocumentSettings(textDocument.uri);
     const diagnostics = [];
     // Create JsonhReader
-    let jsonhReader = JsonhReader.fromString(textDocument.getText(), new JsonhReaderOptions({
-        version: JsonhVersion[settings.jsonhVersion],
+    let jsonhReader = jsonh_reader_1.default.fromString(textDocument.getText(), new jsonh_reader_options_1.default({
+        version: jsonh_version_1.default[settings.jsonhVersion],
         parseSingleElement: true,
     }));
     // Get start index of first token after skipping whitespace
@@ -169,44 +172,44 @@ async function validateTextDocument(textDocument) {
                     source: 'JSONH',
                 };
                 diagnostics.push(readErrorDiagnostic);
-                return { result: Result.fromError(new Error()) };
+                return { result: result_1.default.fromError(new Error()) };
             }
             switch (tokenResult.value.jsonType) {
                 // Null
-                case JsonTokenType.Null: {
+                case json_token_type_1.default.Null: {
                     let element = null;
                     if (submitElement(element)) {
-                        return { result: Result.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
+                        return { result: result_1.default.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
                     }
                     break;
                 }
                 // True
-                case JsonTokenType.True: {
+                case json_token_type_1.default.True: {
                     let element = true;
                     if (submitElement(element)) {
-                        return { result: Result.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
+                        return { result: result_1.default.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
                     }
                     break;
                 }
                 // False
-                case JsonTokenType.False: {
+                case json_token_type_1.default.False: {
                     let element = false;
                     if (submitElement(element)) {
-                        return { result: Result.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
+                        return { result: result_1.default.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
                     }
                     break;
                 }
                 // String
-                case JsonTokenType.String: {
+                case json_token_type_1.default.String: {
                     let element = tokenResult.value.value;
                     if (submitElement(element)) {
-                        return { result: Result.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
+                        return { result: result_1.default.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
                     }
                     break;
                 }
                 // Number
-                case JsonTokenType.Number: {
-                    let result = JsonhNumberParser.parse(tokenResult.value.value);
+                case json_token_type_1.default.Number: {
+                    let result = jsonh_number_parser_1.default.parse(tokenResult.value.value);
                     if (result.isError) {
                         // Report number parse error
                         const numberParseErrorDiagnostic = {
@@ -219,46 +222,46 @@ async function validateTextDocument(textDocument) {
                             source: 'JSONH',
                         };
                         diagnostics.push(numberParseErrorDiagnostic);
-                        return { result: Result.fromError(new Error()) };
+                        return { result: result_1.default.fromError(new Error()) };
                     }
                     let element = result.value;
                     if (submitElement(element)) {
-                        return { result: Result.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
+                        return { result: result_1.default.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
                     }
                     break;
                 }
                 // Start Object
-                case JsonTokenType.StartObject: {
+                case json_token_type_1.default.StartObject: {
                     let element = {};
                     startElement(element);
                     break;
                 }
                 // Start Array
-                case JsonTokenType.StartArray: {
+                case json_token_type_1.default.StartArray: {
                     let element = [];
                     startElement(element);
                     break;
                 }
                 // End Object/Array
-                case JsonTokenType.EndObject:
-                case JsonTokenType.EndArray: {
+                case json_token_type_1.default.EndObject:
+                case json_token_type_1.default.EndArray: {
                     // Nested element
                     if (currentElements.length > 1) {
                         currentElements.pop();
                     }
                     // Root element
                     else {
-                        return { result: Result.fromValue(currentElements.at(-1)), schemaPropertyValue, schemaPropertyNameRange };
+                        return { result: result_1.default.fromValue(currentElements.at(-1)), schemaPropertyValue, schemaPropertyNameRange };
                     }
                     break;
                 }
                 // Property Name
-                case JsonTokenType.PropertyName: {
+                case json_token_type_1.default.PropertyName: {
                     currentPropertyName = tokenResult.value.value;
                     break;
                 }
                 // Comment
-                case JsonTokenType.Comment: {
+                case json_token_type_1.default.Comment: {
                     break;
                 }
                 // Not Implemented
@@ -270,7 +273,7 @@ async function validateTextDocument(textDocument) {
             if (settings.enableSchemaValidation) {
                 switch (tokenResult.value.jsonType) {
                     // Property Name
-                    case JsonTokenType.PropertyName: {
+                    case json_token_type_1.default.PropertyName: {
                         if (currentElements.length === 1 && tokenResult.value.value === "$schema") {
                             schemaIsCurrentProperty = true;
                             schemaPropertyNameRange = { start: startTokenCharCounter, end: jsonhReader.charCounter };
@@ -278,11 +281,11 @@ async function validateTextDocument(textDocument) {
                         break;
                     }
                     // Primitive value
-                    case JsonTokenType.Null:
-                    case JsonTokenType.True:
-                    case JsonTokenType.False:
-                    case JsonTokenType.String:
-                    case JsonTokenType.Number: {
+                    case json_token_type_1.default.Null:
+                    case json_token_type_1.default.True:
+                    case json_token_type_1.default.False:
+                    case json_token_type_1.default.String:
+                    case json_token_type_1.default.Number: {
                         if (schemaIsCurrentProperty) {
                             schemaPropertyValue = tokenResult.value;
                         }
@@ -294,7 +297,7 @@ async function validateTextDocument(textDocument) {
             // Check duplicate property name
             if (settings.checkDuplicateProperties) {
                 switch (tokenResult.value.jsonType) {
-                    case JsonTokenType.PropertyName: {
+                    case json_token_type_1.default.PropertyName: {
                         let object = currentElements.at(-1);
                         if (Object.hasOwn(object, tokenResult.value.value)) {
                             const duplicatePropertyDiagnostic = {
@@ -326,7 +329,7 @@ async function validateTextDocument(textDocument) {
             source: 'JSONH',
         };
         diagnostics.push(endOfInputErrorDiagnostic);
-        return { result: Result.fromError(new Error()) };
+        return { result: result_1.default.fromError(new Error()) };
     };
     // Parse element
     let parseResult = parseElement();
@@ -344,7 +347,7 @@ async function validateTextDocument(textDocument) {
                     source: 'JSONH',
                 };
                 diagnostics.push(endOfElementsErrorDiagnostic);
-                parseResult.result = Result.fromError(new Error());
+                parseResult.result = result_1.default.fromError(new Error());
             }
         }
     }
@@ -353,7 +356,7 @@ async function validateTextDocument(textDocument) {
         if (parseResult.result.isValue && parseResult.schemaPropertyValue !== undefined && parseResult.schemaPropertyNameRange !== undefined) {
             try {
                 // Ensure schema is string
-                if (parseResult.schemaPropertyValue.jsonType !== JsonTokenType.String) {
+                if (parseResult.schemaPropertyValue.jsonType !== json_token_type_1.default.String) {
                     throw new Error("Schema URI must be string");
                 }
                 // Fetch schema and parse as object
