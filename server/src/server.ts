@@ -20,6 +20,8 @@ import {
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
+import { promises as fs } from 'fs';
+
 import JsonhReader = require('jsonh-ts/build/jsonh-reader');
 import JsonhReaderOptions = require('jsonh-ts/build/jsonh-reader-options');
 import JsonhVersion = require('jsonh-ts/build/jsonh-version');
@@ -420,10 +422,22 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 				}
 
 				// Fetch schema and parse as object
+				async function fetchSchema(source: string): Promise<string> {
+					// Web URL
+					if (source.startsWith("http:") || source.startsWith("https:")) {
+						let schemaResponse: Response = await fetch(source);
+						let schemaText: string = await schemaResponse.text();
+						return schemaText;
+					}
+					// File
+					else {
+						let schemaText: string = await fs.readFile(source, { encoding: "utf8" });
+						return schemaText;
+					}
+				}
 				let schemaObject: any;
 				try {
-					let schemaResponse: Response = await fetch(parseResult.schemaPropertyValue.value);
-					let schemaText: string = await schemaResponse.text();
+					let schemaText: string = await fetchSchema(parseResult.schemaPropertyValue.value);
 					schemaObject = JSON.parse(schemaText);
 				}
 				catch (error: unknown) {

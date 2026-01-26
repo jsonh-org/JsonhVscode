@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const node_1 = require("vscode-languageserver/node");
 const vscode_languageserver_textdocument_1 = require("vscode-languageserver-textdocument");
+const fs_1 = require("fs");
 const JsonhReader = require("jsonh-ts/build/jsonh-reader");
 const JsonhReaderOptions = require("jsonh-ts/build/jsonh-reader-options");
 const JsonhVersion = require("jsonh-ts/build/jsonh-version");
@@ -356,10 +357,22 @@ async function validateTextDocument(textDocument) {
                     throw new Error("Schema URI must be string");
                 }
                 // Fetch schema and parse as object
+                async function fetchSchema(source) {
+                    // Web URL
+                    if (source.startsWith("http:") || source.startsWith("https:")) {
+                        let schemaResponse = await fetch(source);
+                        let schemaText = await schemaResponse.text();
+                        return schemaText;
+                    }
+                    // File
+                    else {
+                        let schemaText = await fs_1.promises.readFile(source, { encoding: "utf8" });
+                        return schemaText;
+                    }
+                }
                 let schemaObject;
                 try {
-                    let schemaResponse = await fetch(parseResult.schemaPropertyValue.value);
-                    let schemaText = await schemaResponse.text();
+                    let schemaText = await fetchSchema(parseResult.schemaPropertyValue.value);
                     schemaObject = JSON.parse(schemaText);
                 }
                 catch (error) {
