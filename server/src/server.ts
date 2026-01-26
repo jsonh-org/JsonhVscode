@@ -1,3 +1,6 @@
+import { promises as fs } from 'fs';
+import path from 'path';
+
 import {
 	createConnection,
 	TextDocuments,
@@ -20,7 +23,7 @@ import {
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
-import { promises as fs } from 'fs';
+import { URI } from 'vscode-uri';
 
 import JsonhReader from 'jsonh-ts/build/jsonh-reader';
 import JsonhReaderOptions from 'jsonh-ts/build/jsonh-reader-options';
@@ -431,7 +434,8 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 					}
 					// File
 					else {
-						const schemaText: string = await fs.readFile(source, { encoding: "utf8" });
+						const schemaPath: string = path.relative(path.dirname(URI.parse(textDocument.uri).fsPath), source);
+						const schemaText: string = await fs.readFile(schemaPath, { encoding: "utf8" });
 						return schemaText;
 					}
 				}

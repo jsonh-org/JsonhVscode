@@ -3,9 +3,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const fs_1 = require("fs");
+const path_1 = __importDefault(require("path"));
 const node_1 = require("vscode-languageserver/node");
 const vscode_languageserver_textdocument_1 = require("vscode-languageserver-textdocument");
-const fs_1 = require("fs");
+const vscode_uri_1 = require("vscode-uri");
 const jsonh_reader_1 = __importDefault(require("jsonh-ts/build/jsonh-reader"));
 const jsonh_reader_options_1 = __importDefault(require("jsonh-ts/build/jsonh-reader-options"));
 const jsonh_version_1 = __importDefault(require("jsonh-ts/build/jsonh-version"));
@@ -369,7 +371,8 @@ async function validateTextDocument(textDocument) {
                     }
                     // File
                     else {
-                        const schemaText = await fs_1.promises.readFile(source, { encoding: "utf8" });
+                        const schemaPath = path_1.default.relative(path_1.default.dirname(vscode_uri_1.URI.parse(textDocument.uri).fsPath), source);
+                        const schemaText = await fs_1.promises.readFile(schemaPath, { encoding: "utf8" });
                         return schemaText;
                     }
                 }

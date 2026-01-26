@@ -10,6 +10,7 @@
 		"ajv": "^8.17.1",
 		"jsonh-ts": "^2.7.0",
 		"vscode-languageserver": "^9.0.1",
-		"vscode-languageserver-textdocument": "^1.0.11"
+		"vscode-languageserver-textdocument": "^1.0.11",
+		"vscode-uri": "^3.1.0"
 	}
 }
