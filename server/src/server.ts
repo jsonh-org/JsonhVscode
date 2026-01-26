@@ -166,7 +166,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 	const diagnostics: Diagnostic[] = [];
 
 	// Create JsonhReader
-	let jsonhReader: JsonhReader = JsonhReader.fromString(textDocument.getText(), new JsonhReaderOptions({
+	const jsonhReader: JsonhReader = JsonhReader.fromString(textDocument.getText(), new JsonhReaderOptions({
 		version: JsonhVersion[settings.jsonhVersion as keyof typeof JsonhVersion],
 		parseSingleElement: true,
 	}));
@@ -176,32 +176,32 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 	let startTokenCharCounter: number = jsonhReader.charCounter;
 
 	// Parse methods
-	let currentElements: unknown[] = [];
+	const currentElements: unknown[] = [];
 	let currentPropertyName: string | null = null;
-	let submitElement = function (element: unknown): boolean {
+	const submitElement = function (element: unknown): boolean {
 		// Root value
 		if (currentElements.length === 0) {
 			return true;
 		}
 		// Array item
 		if (currentPropertyName === null) {
-			let array: any[] = currentElements.at(-1) as any[];
+			const array: any[] = currentElements.at(-1) as any[];
 			array.push(element);
 			return false;
 		}
 		// Object property
 		else {
-			let object: any = currentElements.at(-1) as any;
+			const object: any = currentElements.at(-1) as any;
 			object[currentPropertyName] = element;
 			currentPropertyName = null;
 			return false;
 		}
 	};
-	let startElement = function (element: unknown): void {
+	const startElement = function (element: unknown): void {
 		submitElement(element);
 		currentElements.push(element);
 	};
-	let parseElement = function (): {
+	const parseElement = function (): {
 		result: Result<unknown>;
 		schemaPropertyValue?: JsonhToken | undefined;
 		schemaPropertyNameRange?: { start: number, end: number } | undefined;
@@ -212,7 +212,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 		let schemaPropertyValue: JsonhToken | undefined = undefined;
 
 		// Read each JsonhToken
-		for (let tokenResult of jsonhReader.readElement()) {
+		for (const tokenResult of jsonhReader.readElement()) {
 			// Check read error
 			if (tokenResult.isError) {
 				// Report read error
@@ -232,7 +232,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 			switch (tokenResult.value.jsonType) {
 				// Null
 				case JsonTokenType.Null: {
-					let element: null = null;
+					const element: null = null;
 					if (submitElement(element)) {
 						return { result: Result.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
 					}
@@ -240,7 +240,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 				}
 				// True
 				case JsonTokenType.True: {
-					let element: boolean = true;
+					const element: boolean = true;
 					if (submitElement(element)) {
 						return { result: Result.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
 					}
@@ -248,7 +248,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 				}
 				// False
 				case JsonTokenType.False: {
-					let element: boolean = false;
+					const element: boolean = false;
 					if (submitElement(element)) {
 						return { result: Result.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
 					}
@@ -256,7 +256,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 				}
 				// String
 				case JsonTokenType.String: {
-					let element: string = tokenResult.value.value;
+					const element: string = tokenResult.value.value;
 					if (submitElement(element)) {
 						return { result: Result.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
 					}
@@ -264,7 +264,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 				}
 				// Number
 				case JsonTokenType.Number: {
-					let result: Result<number> = JsonhNumberParser.parse(tokenResult.value.value);
+					const result: Result<number> = JsonhNumberParser.parse(tokenResult.value.value);
 					if (result.isError) {
 						// Report number parse error
 						const numberParseErrorDiagnostic: Diagnostic = {
@@ -279,7 +279,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 						diagnostics.push(numberParseErrorDiagnostic);
 						return { result: Result.fromError(new Error()) };
 					}
-					let element: number = result.value;
+					const element: number = result.value;
 					if (submitElement(element)) {
 						return { result: Result.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
 					}
@@ -287,13 +287,13 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 				}
 				// Start Object
 				case JsonTokenType.StartObject: {
-					let element: object = {};
+					const element: object = {};
 					startElement(element);
 					break;
 				}
 				// Start Array
 				case JsonTokenType.StartArray: {
-					let element: any[] = [];
+					const element: any[] = [];
 					startElement(element);
 					break;
 				}
@@ -355,7 +355,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 			if (settings.checkDuplicateProperties) {
 				switch (tokenResult.value.jsonType) {
 					case JsonTokenType.PropertyName: {
-						let object: any = currentElements.at(-1) as any;
+						const object: any = currentElements.at(-1) as any;
 						if (Object.hasOwn(object, tokenResult.value.value)) {
 							const duplicatePropertyDiagnostic: Diagnostic = {
 								severity: DiagnosticSeverity.Warning,
@@ -392,10 +392,10 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 	}
 
 	// Parse element
-	let parseResult = parseElement();
+	const parseResult = parseElement();
 	// Ensure exactly one element
 	if (jsonhReader.options.parseSingleElement) {
-		for (let token of jsonhReader.readEndOfElements()) {
+		for (const token of jsonhReader.readEndOfElements()) {
 			if (token.isError) {
 				const endOfElementsErrorDiagnostic: Diagnostic = {
 					severity: DiagnosticSeverity.Error,
@@ -425,19 +425,19 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 				async function fetchSchema(source: string): Promise<string> {
 					// Web URL
 					if (source.startsWith("http:") || source.startsWith("https:")) {
-						let schemaResponse: Response = await fetch(source);
-						let schemaText: string = await schemaResponse.text();
+						const schemaResponse: Response = await fetch(source);
+						const schemaText: string = await schemaResponse.text();
 						return schemaText;
 					}
 					// File
 					else {
-						let schemaText: string = await fs.readFile(source, { encoding: "utf8" });
+						const schemaText: string = await fs.readFile(source, { encoding: "utf8" });
 						return schemaText;
 					}
 				}
 				let schemaObject: any;
 				try {
-					let schemaText: string = await fetchSchema(parseResult.schemaPropertyValue.value);
+					const schemaText: string = await fetchSchema(parseResult.schemaPropertyValue.value);
 					schemaObject = JSON.parse(schemaText);
 				}
 				catch (error: unknown) {
@@ -445,8 +445,8 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 				}
 
 				// Validate element against schena
-				let avj = new Ajv();
-				let isValid = avj.validate(schemaObject, parseResult.result.value);
+				const avj = new Ajv();
+				const isValid = avj.validate(schemaObject, parseResult.result.value);
 				if (!isValid) {
 					throw new Error(`Failed schema validation: ${avj.errorsText()}`);
 				}

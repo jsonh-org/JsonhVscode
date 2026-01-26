@@ -119,7 +119,7 @@ async function validateTextDocument(textDocument) {
     const settings = await getDocumentSettings(textDocument.uri);
     const diagnostics = [];
     // Create JsonhReader
-    let jsonhReader = jsonh_reader_1.default.fromString(textDocument.getText(), new jsonh_reader_options_1.default({
+    const jsonhReader = jsonh_reader_1.default.fromString(textDocument.getText(), new jsonh_reader_options_1.default({
         version: jsonh_version_1.default[settings.jsonhVersion],
         parseSingleElement: true,
     }));
@@ -127,38 +127,38 @@ async function validateTextDocument(textDocument) {
     jsonhReader.hasToken();
     let startTokenCharCounter = jsonhReader.charCounter;
     // Parse methods
-    let currentElements = [];
+    const currentElements = [];
     let currentPropertyName = null;
-    let submitElement = function (element) {
+    const submitElement = function (element) {
         // Root value
         if (currentElements.length === 0) {
             return true;
         }
         // Array item
         if (currentPropertyName === null) {
-            let array = currentElements.at(-1);
+            const array = currentElements.at(-1);
             array.push(element);
             return false;
         }
         // Object property
         else {
-            let object = currentElements.at(-1);
+            const object = currentElements.at(-1);
             object[currentPropertyName] = element;
             currentPropertyName = null;
             return false;
         }
     };
-    let startElement = function (element) {
+    const startElement = function (element) {
         submitElement(element);
         currentElements.push(element);
     };
-    let parseElement = function () {
+    const parseElement = function () {
         // Track schema
         let schemaIsCurrentProperty = false;
         let schemaPropertyNameRange = undefined;
         let schemaPropertyValue = undefined;
         // Read each JsonhToken
-        for (let tokenResult of jsonhReader.readElement()) {
+        for (const tokenResult of jsonhReader.readElement()) {
             // Check read error
             if (tokenResult.isError) {
                 // Report read error
@@ -177,7 +177,7 @@ async function validateTextDocument(textDocument) {
             switch (tokenResult.value.jsonType) {
                 // Null
                 case json_token_type_1.default.Null: {
-                    let element = null;
+                    const element = null;
                     if (submitElement(element)) {
                         return { result: result_1.default.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
                     }
@@ -185,7 +185,7 @@ async function validateTextDocument(textDocument) {
                 }
                 // True
                 case json_token_type_1.default.True: {
-                    let element = true;
+                    const element = true;
                     if (submitElement(element)) {
                         return { result: result_1.default.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
                     }
@@ -193,7 +193,7 @@ async function validateTextDocument(textDocument) {
                 }
                 // False
                 case json_token_type_1.default.False: {
-                    let element = false;
+                    const element = false;
                     if (submitElement(element)) {
                         return { result: result_1.default.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
                     }
@@ -201,7 +201,7 @@ async function validateTextDocument(textDocument) {
                 }
                 // String
                 case json_token_type_1.default.String: {
-                    let element = tokenResult.value.value;
+                    const element = tokenResult.value.value;
                     if (submitElement(element)) {
                         return { result: result_1.default.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
                     }
@@ -209,7 +209,7 @@ async function validateTextDocument(textDocument) {
                 }
                 // Number
                 case json_token_type_1.default.Number: {
-                    let result = jsonh_number_parser_1.default.parse(tokenResult.value.value);
+                    const result = jsonh_number_parser_1.default.parse(tokenResult.value.value);
                     if (result.isError) {
                         // Report number parse error
                         const numberParseErrorDiagnostic = {
@@ -224,7 +224,7 @@ async function validateTextDocument(textDocument) {
                         diagnostics.push(numberParseErrorDiagnostic);
                         return { result: result_1.default.fromError(new Error()) };
                     }
-                    let element = result.value;
+                    const element = result.value;
                     if (submitElement(element)) {
                         return { result: result_1.default.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
                     }
@@ -232,13 +232,13 @@ async function validateTextDocument(textDocument) {
                 }
                 // Start Object
                 case json_token_type_1.default.StartObject: {
-                    let element = {};
+                    const element = {};
                     startElement(element);
                     break;
                 }
                 // Start Array
                 case json_token_type_1.default.StartArray: {
-                    let element = [];
+                    const element = [];
                     startElement(element);
                     break;
                 }
@@ -298,7 +298,7 @@ async function validateTextDocument(textDocument) {
             if (settings.checkDuplicateProperties) {
                 switch (tokenResult.value.jsonType) {
                     case json_token_type_1.default.PropertyName: {
-                        let object = currentElements.at(-1);
+                        const object = currentElements.at(-1);
                         if (Object.hasOwn(object, tokenResult.value.value)) {
                             const duplicatePropertyDiagnostic = {
                                 severity: node_1.DiagnosticSeverity.Warning,
@@ -332,10 +332,10 @@ async function validateTextDocument(textDocument) {
         return { result: result_1.default.fromError(new Error()) };
     };
     // Parse element
-    let parseResult = parseElement();
+    const parseResult = parseElement();
     // Ensure exactly one element
     if (jsonhReader.options.parseSingleElement) {
-        for (let token of jsonhReader.readEndOfElements()) {
+        for (const token of jsonhReader.readEndOfElements()) {
             if (token.isError) {
                 const endOfElementsErrorDiagnostic = {
                     severity: node_1.DiagnosticSeverity.Error,
@@ -363,27 +363,27 @@ async function validateTextDocument(textDocument) {
                 async function fetchSchema(source) {
                     // Web URL
                     if (source.startsWith("http:") || source.startsWith("https:")) {
-                        let schemaResponse = await fetch(source);
-                        let schemaText = await schemaResponse.text();
+                        const schemaResponse = await fetch(source);
+                        const schemaText = await schemaResponse.text();
                         return schemaText;
                     }
                     // File
                     else {
-                        let schemaText = await fs_1.promises.readFile(source, { encoding: "utf8" });
+                        const schemaText = await fs_1.promises.readFile(source, { encoding: "utf8" });
                         return schemaText;
                     }
                 }
                 let schemaObject;
                 try {
-                    let schemaText = await fetchSchema(parseResult.schemaPropertyValue.value);
+                    const schemaText = await fetchSchema(parseResult.schemaPropertyValue.value);
                     schemaObject = JSON.parse(schemaText);
                 }
                 catch (error) {
                     throw new Error(`Failed to fetch schema: ${error}`);
                 }
                 // Validate element against schena
-                let avj = new ajv_1.Ajv();
-                let isValid = avj.validate(schemaObject, parseResult.result.value);
+                const avj = new ajv_1.Ajv();
+                const isValid = avj.validate(schemaObject, parseResult.result.value);
                 if (!isValid) {
                     throw new Error(`Failed schema validation: ${avj.errorsText()}`);
                 }
