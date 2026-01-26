@@ -371,7 +371,7 @@ async function validateTextDocument(textDocument) {
                     }
                     // File
                     else {
-                        const schemaPath = path_1.default.relative(path_1.default.dirname(vscode_uri_1.URI.parse(textDocument.uri).fsPath), source);
+                        const schemaPath = path_1.default.resolve(path_1.default.dirname(vscode_uri_1.URI.parse(textDocument.uri).fsPath), source);
                         const schemaText = await fs_1.promises.readFile(schemaPath, { encoding: "utf8" });
                         return schemaText;
                     }

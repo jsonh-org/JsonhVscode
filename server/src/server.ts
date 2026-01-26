@@ -434,7 +434,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 					}
 					// File
 					else {
-						const schemaPath: string = path.relative(path.dirname(URI.parse(textDocument.uri).fsPath), source);
+						const schemaPath: string = path.resolve(path.dirname(URI.parse(textDocument.uri).fsPath), source);
 						const schemaText: string = await fs.readFile(schemaPath, { encoding: "utf8" });
 						return schemaText;
 					}
