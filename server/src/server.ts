@@ -485,6 +485,28 @@ connection.onCompletionResolve(
 	}
 );
 
+connection.onRequest('jsonh/previewJson', async (params: { uri: string }): Promise<string> => {
+	// Get document
+	const document: TextDocument | undefined = documents.get(params.uri);
+	if (document === undefined) {
+		return "Undefined document";
+	}
+	// Get settings
+	const settings: JsonhLspSettings = await getDocumentSettings(params.uri);
+
+	// Parse element
+	const result: Result<unknown> = JsonhReader.parseElementFromString(document.getText(), new JsonhReaderOptions({
+		version: JsonhVersion[settings.jsonhVersion as keyof typeof JsonhVersion],
+		parseSingleElement: true,
+	}));
+	if (result.isError) {
+		return `Error: ${result.error.message}`;
+	}
+
+	// Convert element to JSON
+	return JSON.stringify(result.value, null, "    ");
+});
+
 // Make the text document manager listen on the connection
 // for open, change and close text document events
 documents.listen(connection);

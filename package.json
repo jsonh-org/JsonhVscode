@@ -76,6 +76,22 @@
           "description": "Whether to enable duplicate property warnings."
         }
       }
+    },
+    "commands": [
+      {
+        "command": "jsonh.previewJson",
+        "title": "Preview JSON",
+        "icon": "$(open-preview)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "jsonh.previewJson",
+          "when": "resourceLangId == jsonh",
+          "group": "navigation"
+        }
+      ]
     }
   },
   "devDependencies": {

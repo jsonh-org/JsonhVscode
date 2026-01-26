@@ -36,9 +36,75 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.activate = activate;
 exports.deactivate = deactivate;
 const path = __importStar(require("path"));
-const vscode_1 = require("vscode");
+const vscode = __importStar(require("vscode"));
 const node_1 = require("vscode-languageclient/node");
 let client;
+let jsonPreviewPanel;
+async function openJsonPreview() {
+    if (jsonPreviewPanel !== undefined) {
+        return;
+    }
+    jsonPreviewPanel = vscode.window.createWebviewPanel('jsonPreview', 'JSON Preview', vscode.ViewColumn.Beside);
+    jsonPreviewPanel.onDidDispose(() => {
+        closeJsonPreview();
+    });
+    await updateJsonPreview();
+}
+function closeJsonPreview() {
+    if (jsonPreviewPanel !== undefined) {
+        jsonPreviewPanel.dispose();
+        jsonPreviewPanel = undefined;
+    }
+}
+async function updateJsonPreview() {
+    if (jsonPreviewPanel === undefined || client === undefined) {
+        return;
+    }
+    const activeTextEditor = vscode.window.activeTextEditor;
+    if (activeTextEditor === undefined) {
+        return;
+    }
+    const previewJsonResult = await client.sendRequest('jsonh/previewJson', { uri: activeTextEditor.document.uri.toString() });
+    jsonPreviewPanel.webview.html = `
+<style>
+.string { color: #CE9178; }
+.number { color: #B5CEA8; }
+.boolean { color: #569CD6; }
+.null { color: #569CD6; }
+.key { color: #9CDCFE; }
+</style>
+<pre>
+${syntaxHighlight(previewJsonResult)}
+</pre>
+`;
+}
+/**
+ * Source: https://stackoverflow.com/a/7220510
+ */
+function syntaxHighlight(json) {
+    json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+        var cls = 'number';
+        if (/^"/.test(match)) {
+            if (/:$/.test(match)) {
+                cls = 'key';
+            }
+            else {
+                cls = 'string';
+            }
+        }
+        else if (/true|false/.test(match)) {
+            cls = 'boolean';
+        }
+        else if (/null/.test(match)) {
+            cls = 'null';
+        }
+        return '<span class="' + cls + '">' + match + '</span>';
+    });
+}
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 function activate(context) {
     // The server is implemented in node
     const serverModule = context.asAbsolutePath(path.join('server', 'out', 'server.js'));
@@ -57,33 +123,46 @@ function activate(context) {
         documentSelector: [{ scheme: 'file', language: 'jsonh' }],
         synchronize: {
             // Notify the server about file changes to '.clientrc files contained in the workspace
-            fileEvents: vscode_1.workspace.createFileSystemWatcher('**/.clientrc')
+            fileEvents: vscode.workspace.createFileSystemWatcher('**/.clientrc')
         }
     };
     // Create the language client and start the client.
     client = new node_1.LanguageClient('jsonhLanguageServer', "JSONH Language Server", serverOptions, clientOptions);
     // Enable/disable language client based on settings
-    vscode_1.workspace.onDidChangeConfiguration((event) => {
+    vscode.workspace.onDidChangeConfiguration((event) => {
         if (event.affectsConfiguration('jsonhLanguageServer.enable')) {
-            const isEnabled = vscode_1.workspace.getConfiguration('jsonhLanguageServer').get('enable');
+            const isEnabled = vscode.workspace.getConfiguration('jsonhLanguageServer').get('enable');
             if (isEnabled) {
-                client.start();
+                client?.start();
             }
             else {
-                client.stop();
+                client?.stop();
             }
         }
     });
     // Start the client. This will also launch the server
-    const isEnabled = vscode_1.workspace.getConfiguration('jsonhLanguageServer').get('enable');
+    const isEnabled = vscode.workspace.getConfiguration('jsonhLanguageServer').get('enable');
     if (isEnabled) {
         client.start();
     }
+    // Register JSON Preview command
+    context.subscriptions.push(vscode.commands.registerCommand('jsonh.previewJson', openJsonPreview));
+    // Update JSON Preview on document change
+    vscode.workspace.onDidChangeTextDocument(async (event) => {
+        if (event.document === vscode.window.activeTextEditor?.document) {
+            await sleep(100);
+            await updateJsonPreview();
+        }
+    });
+    vscode.window.onDidChangeActiveTextEditor(async (editor) => {
+        if (editor !== undefined) {
+            await sleep(100);
+            await updateJsonPreview();
+        }
+    });
 }
 function deactivate() {
-    if (!client) {
-        return undefined;
-    }
-    return client.stop();
+    closeJsonPreview();
+    return client?.stop();
 }
 //# sourceMappingURL=extension.js.map
