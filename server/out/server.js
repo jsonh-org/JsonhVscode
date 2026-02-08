@@ -336,20 +336,22 @@ async function validateTextDocument(textDocument) {
     // Parse element
     const parseResult = parseElement();
     // Ensure exactly one element
-    if (jsonhReader.options.parseSingleElement) {
-        for (const token of jsonhReader.readEndOfElements()) {
-            if (token.isError) {
-                const endOfElementsErrorDiagnostic = {
-                    severity: node_1.DiagnosticSeverity.Error,
-                    range: {
-                        start: textDocument.positionAt(jsonhReader.charCounter),
-                        end: textDocument.positionAt(jsonhReader.charCounter),
-                    },
-                    message: `Error: ${token.error.message}`,
-                    source: 'JSONH',
-                };
-                diagnostics.push(endOfElementsErrorDiagnostic);
-                parseResult.result = result_1.default.fromError(new Error());
+    if (parseResult.result.isValue) {
+        if (jsonhReader.options.parseSingleElement) {
+            for (const token of jsonhReader.readEndOfElements()) {
+                if (token.isError) {
+                    const endOfElementsErrorDiagnostic = {
+                        severity: node_1.DiagnosticSeverity.Error,
+                        range: {
+                            start: textDocument.positionAt(jsonhReader.charCounter),
+                            end: textDocument.positionAt(jsonhReader.charCounter),
+                        },
+                        message: `Error: ${token.error.message}`,
+                        source: 'JSONH',
+                    };
+                    diagnostics.push(endOfElementsErrorDiagnostic);
+                    parseResult.result = result_1.default.fromError(new Error());
+                }
             }
         }
     }
