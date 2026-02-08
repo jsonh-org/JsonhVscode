@@ -100,7 +100,7 @@
     }
   },
   "devDependencies": {
-    "@types/node": "^25.2.2",
+    "@types/node": "^22",
     "typescript": "^5.9.3"
   }
 }
