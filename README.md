@@ -11,7 +11,7 @@ Since JSONH is compatible with JSON, any JSONH syntax can be represented with eq
 
 ## JsonhVscode
 
-JsonhVscode is a syntax highlighter for [JSONH V2](https://github.com/jsonh-org/Jsonh) using TextMate Grammars and [JsonhTs](https://github.com/jsonh-org/JsonhTs).
+JsonhVscode is a syntax highlighter for [JSONH V2](https://github.com/jsonh-org/Jsonh) using TextMate Grammars with a Language Server Protocol powered by [JsonhTs](https://github.com/jsonh-org/JsonhTs).
 
 ## Example
 
