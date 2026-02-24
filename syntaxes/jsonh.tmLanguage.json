@@ -113,7 +113,7 @@
 		"named-literal": {
 			"name": "constant.language.jsonh",
 			"match": "(true|false|null)(?![\\x{0009}-\\x{000D} \\x{0085}\\x{00A0}\\x{1680}\\x{2000}-\\x{200A}\\x{2028}\\x{2029}\\x{202F}\\x{205F}\\x{3000}]*[^\\x{0009}-\\x{000D} \\x{0085}\\x{00A0}\\x{1680}\\x{2000}-\\x{200A}\\x{2028}\\x{2029}\\x{202F}\\x{205F}\\x{3000}\\,\\[\\]\\{\\}\\/\\#\\\"\\'\\@])",
-			"comment": "NOT<(whitespace) quoteless-string-or-property> [true, false, null]"
+			"comment": "[true, false, null] NOT<(whitespace) quoteless-string-or-property>"
 		},
 		"number": {
 			"patterns": [
