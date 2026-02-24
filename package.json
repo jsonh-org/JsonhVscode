@@ -8,7 +8,7 @@
     "url": "https://github.com/jsonh-org/JsonhVscode"
   },
   "icon": "Icon.png",
-  "version": "4.6.0",
+  "version": "4.7.0",
   "engines": {
     "vscode": "^1.100.0"
   },
