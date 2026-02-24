@@ -346,7 +346,7 @@
 				},
 				{
 					"name": "constant.character.escape.character.jsonh",
-					"match": "\\\\."
+					"match": "\\\\[^uxU]"
 				}
 			]
 		},
