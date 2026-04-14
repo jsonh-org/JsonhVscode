@@ -114,7 +114,7 @@ function activate(context) {
         run: { module: serverModule, transport: node_1.TransportKind.ipc },
         debug: {
             module: serverModule,
-            transport: node_1.TransportKind.ipc,
+            transport: node_1.TransportKind.ipc
         }
     };
     // Options to control the language client
@@ -145,6 +145,11 @@ function activate(context) {
     if (isEnabled) {
         client.start();
     }
+    // Register workspace trust changed notification
+    client.sendNotification('jsonh/workspaceTrustChanged', { isWorkspaceTrusted: vscode.workspace.isTrusted });
+    vscode.workspace.onDidGrantWorkspaceTrust(() => {
+        client?.sendNotification('jsonh/workspaceTrustChanged', { isWorkspaceTrusted: vscode.workspace.isTrusted });
+    });
     // Register JSON Preview command
     context.subscriptions.push(vscode.commands.registerCommand('jsonh.previewJson', openJsonPreview));
     // Update JSON Preview on document change

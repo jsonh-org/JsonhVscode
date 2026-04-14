@@ -71,8 +71,8 @@
         "jsonhLanguageServer.enableSchemaValidation": {
           "scope": "resource",
           "type": "boolean",
-          "default": false,
-          "description": "Whether to enable JSON schema validation with a \"$schema\" property."
+          "default": true,
+          "description": "Whether to enable JSON schema validation with a \"$schema\" property in trusted workspaces."
         },
         "jsonhLanguageServer.checkDuplicateProperties": {
           "scope": "resource",

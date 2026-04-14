@@ -22,6 +22,7 @@ const connection = (0, node_1.createConnection)(node_1.ProposedFeatures.all);
 const documents = new node_1.TextDocuments(vscode_languageserver_textdocument_1.TextDocument);
 let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
+let isWorkspaceTrusted = false;
 connection.onInitialize((params) => {
     const capabilities = params.capabilities;
     // Does the client support the `workspace/configuration` request?
@@ -60,7 +61,7 @@ connection.onInitialized(() => {
 const defaultSettings = {
     enable: true,
     jsonhVersion: "Latest",
-    enableSchemaValidation: false,
+    enableSchemaValidation: true,
     checkDuplicateProperties: true,
 };
 let globalSettings = defaultSettings;
@@ -356,7 +357,7 @@ async function validateTextDocument(textDocument) {
         }
     }
     // Validate schema
-    if (settings.enableSchemaValidation) {
+    if (settings.enableSchemaValidation && isWorkspaceTrusted) {
         if (parseResult.result.isValue && parseResult.schemaPropertyValue !== undefined && parseResult.schemaPropertyNameRange !== undefined) {
             try {
                 // Ensure schema is string
@@ -418,6 +419,9 @@ connection.onCompletion((_textDocumentPosition) => {
 // the completion list.
 connection.onCompletionResolve((item) => {
     return item;
+});
+connection.onNotification('jsonh/workspaceTrustChanged', (params) => {
+    isWorkspaceTrusted = params.isWorkspaceTrusted === true;
 });
 connection.onRequest('jsonh/previewJson', async (params) => {
     // Get document

@@ -101,7 +101,7 @@ export function activate(context: vscode.ExtensionContext): void {
 		run: { module: serverModule, transport: TransportKind.ipc },
 		debug: {
 			module: serverModule,
-			transport: TransportKind.ipc,
+			transport: TransportKind.ipc
 		}
 	};
 
@@ -140,6 +140,12 @@ export function activate(context: vscode.ExtensionContext): void {
 	if (isEnabled) {
 		client.start();
 	}
+
+	// Register workspace trust changed notification
+	client.sendNotification('jsonh/workspaceTrustChanged', { isWorkspaceTrusted: vscode.workspace.isTrusted });
+	vscode.workspace.onDidGrantWorkspaceTrust(() => {
+		client?.sendNotification('jsonh/workspaceTrustChanged', { isWorkspaceTrusted: vscode.workspace.isTrusted });
+	});
 
 	// Register JSON Preview command
 	context.subscriptions.push(vscode.commands.registerCommand('jsonh.previewJson', openJsonPreview));
