@@ -55,7 +55,8 @@
           "scope": "resource",
           "type": "boolean",
           "default": true,
-          "description": "Whether to enable the JSONH language client."
+          "description": "Whether to enable the JSONH language client.",
+          "order": 0
         },
         "jsonhLanguageServer.jsonhVersion": {
           "scope": "resource",
@@ -66,19 +67,22 @@
             "V1",
             "V2"
           ],
-          "description": "Sets the JSONH language version."
+          "description": "Sets the JSONH language version.",
+          "order": 1
         },
         "jsonhLanguageServer.enableSchemaValidation": {
           "scope": "resource",
           "type": "boolean",
           "default": true,
-          "description": "Whether to enable JSON schema validation with a \"$schema\" property in trusted workspaces."
+          "description": "Whether to enable JSON schema validation with a \"$schema\" property in trusted workspaces.",
+          "order": 2
         },
         "jsonhLanguageServer.checkDuplicateProperties": {
           "scope": "resource",
           "type": "boolean",
           "default": true,
-          "description": "Whether to enable duplicate property warnings."
+          "description": "Whether to enable duplicate property warnings.",
+          "order": 3
         }
       }
     },
