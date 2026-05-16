@@ -65,6 +65,7 @@ async function updateJsonPreview() {
         return;
     }
     const previewJsonResult = await client.sendRequest('jsonh/previewJson', { uri: activeTextEditor.document.uri.toString() });
+    // Note: Token colors taken from VSCode "Dark Modern" theme (https://github.com/microsoft/vscode/blob/main/extensions/theme-defaults/themes/dark_vs.json)
     jsonPreviewPanel.webview.html = `
 <style>
 body {
@@ -82,6 +83,7 @@ body {
 .boolean { color: #569CD6; }
 .null { color: #569CD6; }
 .key { color: #9CDCFE; }
+.comment { color: #6A9955; }
 </style>
 <pre>
 ${syntaxHighlight(previewJsonResult)}
