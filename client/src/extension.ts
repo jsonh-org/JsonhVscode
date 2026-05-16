@@ -51,6 +51,16 @@ async function updateJsonPreview(): Promise<void> {
 
 	jsonPreviewPanel.webview.html = `
 <style>
+body {
+	font-size: var(--vscode-editor-font-size);
+    font-family: var(--vscode-editor-font-family);
+    font-weight: var(--vscode-editor-font-weight);
+    line-height: var(--vscode-editor-line-height);
+    letter-spacing: var(--vscode-editor-letter-spacing);
+
+	color: var(--vscode-editor-foreground);
+    background: var(--vscode-editor-background);
+}
 .string { color: #CE9178; }
 .number { color: #B5CEA8; }
 .boolean { color: #569CD6; }
