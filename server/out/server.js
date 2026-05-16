@@ -431,16 +431,16 @@ connection.onRequest('jsonh/previewJson', async (params) => {
     }
     // Get settings
     const settings = await getDocumentSettings(params.uri);
-    // Parse element
-    const result = jsonh_reader_1.default.parseElementFromString(document.getText(), new jsonh_reader_options_1.default({
+    // Parse element as JSON
+    const reader = jsonh_reader_1.default.fromString(document.getText(), new jsonh_reader_options_1.default({
         version: jsonh_version_1.default[settings.jsonhVersion],
         parseSingleElement: true,
     }));
+    const result = reader.parseJson(false, "    ");
     if (result.isError) {
         return `Error: ${result.error.message}`;
     }
-    // Convert element to JSON
-    return JSON.stringify(result.value, null, "    ");
+    return result.value;
 });
 // Make the text document manager listen on the connection
 // for open, change and close text document events

@@ -506,17 +506,16 @@ connection.onRequest('jsonh/previewJson', async (params: { uri: string }): Promi
 	// Get settings
 	const settings: JsonhLspSettings = await getDocumentSettings(params.uri);
 
-	// Parse element
-	const result: Result<unknown> = JsonhReader.parseElementFromString(document.getText(), new JsonhReaderOptions({
+	// Parse element as JSON
+	const reader: JsonhReader = JsonhReader.fromString(document.getText(), new JsonhReaderOptions({
 		version: JsonhVersion[settings.jsonhVersion as keyof typeof JsonhVersion],
 		parseSingleElement: true,
 	}));
+	const result: Result<string> = reader.parseJson(false, "    ");
 	if (result.isError) {
 		return `Error: ${result.error.message}`;
 	}
-
-	// Convert element to JSON
-	return JSON.stringify(result.value, null, "    ");
+	return result.value;
 });
 
 // Make the text document manager listen on the connection
