@@ -70,7 +70,7 @@ body {
 .comment { color: #6A9955; }
 </style>
 <pre>
-${syntaxHighlight(previewJsonResult) }
+${ syntaxHighlight(previewJsonResult) }
 </pre>
 `;
 }
