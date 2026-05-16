@@ -49,7 +49,7 @@
     ],
     "configuration": {
       "type": "object",
-      "title": "JSONH Configuration",
+      "title": "JSONH",
       "properties": {
         "jsonhLanguageServer.enable": {
           "scope": "resource",
