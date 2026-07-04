@@ -8,10 +8,10 @@
 	},
 	"dependencies": {
 		"glob": "^13.0.6",
-		"vscode-languageclient": "^9.0.1"
+		"vscode-languageclient": "^10.1.0"
 	},
 	"devDependencies": {
-		"@types/vscode": "^1.120.0",
-		"@vscode/test-electron": "^2.5.2"
+		"@types/vscode": "^1.125.0",
+		"@vscode/test-electron": "^3.0.0"
 	}
 }
