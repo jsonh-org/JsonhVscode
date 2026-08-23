@@ -108,6 +108,10 @@
           "group": "navigation"
         }
       ]
+    },
+    "configurationDefaults": {
+      "files.encoding": "utf8",
+      "files.eol": "\n"
     }
   },
   "devDependencies": {
