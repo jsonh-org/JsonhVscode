@@ -17,7 +17,7 @@
   ],
   "main": "./client/out/extension",
   "scripts": {
-    "compile": "tsc -b",
+    "build": "tsc -b",
     "watch": "tsc -b -w"
   },
   "contributes": {
