@@ -83,6 +83,13 @@
           "default": true,
           "description": "Whether to enable duplicate property warnings.",
           "order": 3
+        },
+        "jsonhLanguageServer.checkNestedBracelessObjects": {
+          "scope": "resource",
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to enable nested braceless object warnings.",
+          "order": 4
         }
       }
     },

@@ -63,6 +63,7 @@ const defaultSettings = {
     jsonhVersion: "Latest",
     enableSchemaValidation: true,
     checkDuplicateProperties: true,
+    checkNestedBracelessObjects: true,
 };
 let globalSettings = defaultSettings;
 // Cache the settings of all open documents
@@ -121,8 +122,9 @@ documents.onDidChangeContent((change) => {
 async function validateTextDocument(textDocument) {
     const settings = await getDocumentSettings(textDocument.uri);
     const diagnostics = [];
+    const textDocumentText = textDocument.getText();
     // Create JsonhReader
-    const jsonhReader = jsonh_reader_1.default.fromString(textDocument.getText(), new jsonh_reader_options_1.default({
+    const jsonhReader = jsonh_reader_1.default.fromString(textDocumentText, new jsonh_reader_options_1.default({
         version: jsonh_version_1.default[settings.jsonhVersion],
         parseSingleElement: true,
     }));
@@ -314,6 +316,23 @@ async function validateTextDocument(textDocument) {
                             };
                             diagnostics.push(duplicatePropertyDiagnostic);
                         }
+                    }
+                }
+            }
+            // Check nested braceless object
+            if (settings.checkNestedBracelessObjects) {
+                if (tokenResult.value.jsonType === json_token_type_1.default.StartObject) {
+                    if (textDocumentText.at(jsonhReader.charCounter - 1) !== '{') {
+                        const nestedBracelessObjectDiagnostic = {
+                            severity: node_1.DiagnosticSeverity.Warning,
+                            range: {
+                                start: textDocument.positionAt(startTokenCharCounter),
+                                end: textDocument.positionAt(jsonhReader.charCounter),
+                            },
+                            message: `Braceless objects should only be used at the root level`,
+                            source: 'JSONH',
+                        };
+                        diagnostics.push(nestedBracelessObjectDiagnostic);
                     }
                 }
             }

@@ -95,6 +95,7 @@ interface JsonhLspSettings {
 	jsonhVersion: string;
 	enableSchemaValidation: boolean;
 	checkDuplicateProperties: boolean;
+	checkNestedBracelessObjects: boolean;
 }
 
 // The global settings, used when the `workspace/configuration` request is not supported by the client
@@ -103,6 +104,7 @@ const defaultSettings: JsonhLspSettings = {
 	jsonhVersion: "Latest",
 	enableSchemaValidation: true,
 	checkDuplicateProperties: true,
+	checkNestedBracelessObjects: true,
 };
 let globalSettings: JsonhLspSettings = defaultSettings;
 
@@ -170,8 +172,10 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 
 	const diagnostics: Diagnostic[] = [];
 
+	const textDocumentText: string = textDocument.getText();
+
 	// Create JsonhReader
-	const jsonhReader: JsonhReader = JsonhReader.fromString(textDocument.getText(), new JsonhReaderOptions({
+	const jsonhReader: JsonhReader = JsonhReader.fromString(textDocumentText, new JsonhReaderOptions({
 		version: JsonhVersion[settings.jsonhVersion as keyof typeof JsonhVersion],
 		parseSingleElement: true,
 	}));
@@ -373,6 +377,24 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 							}
 							diagnostics.push(duplicatePropertyDiagnostic);
 						}
+					}
+				}
+			}
+
+			// Check nested braceless object
+			if (settings.checkNestedBracelessObjects) {
+				if (tokenResult.value.jsonType === JsonTokenType.StartObject) {
+					if (textDocumentText.at(jsonhReader.charCounter - 1) !== '{') {
+						const nestedBracelessObjectDiagnostic: Diagnostic = {
+							severity: DiagnosticSeverity.Warning,
+							range: {
+								start: textDocument.positionAt(startTokenCharCounter),
+								end: textDocument.positionAt(jsonhReader.charCounter),
+							},
+							message: `Braceless objects should only be used at the root level`,
+							source: 'JSONH',
+						}
+						diagnostics.push(nestedBracelessObjectDiagnostic);
 					}
 				}
 			}
