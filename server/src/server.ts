@@ -384,17 +384,19 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 			// Check nested braceless object
 			if (settings.checkNestedBracelessObjects) {
 				if (tokenResult.value.jsonType === JsonTokenType.StartObject) {
-					if (textDocumentText.at(jsonhReader.charCounter - 1) !== '{') {
-						const nestedBracelessObjectDiagnostic: Diagnostic = {
-							severity: DiagnosticSeverity.Warning,
-							range: {
-								start: textDocument.positionAt(startTokenCharCounter),
-								end: textDocument.positionAt(jsonhReader.charCounter),
-							},
-							message: `Braceless objects should only be used at the root level`,
-							source: 'JSONH',
+					if (currentElements.length > 1) {
+						if (textDocumentText.at(jsonhReader.charCounter - 1) !== '{') {
+							const nestedBracelessObjectDiagnostic: Diagnostic = {
+								severity: DiagnosticSeverity.Warning,
+								range: {
+									start: textDocument.positionAt(startTokenCharCounter),
+									end: textDocument.positionAt(jsonhReader.charCounter),
+								},
+								message: `Braceless objects should only be used at the root level`,
+								source: 'JSONH',
+							}
+							diagnostics.push(nestedBracelessObjectDiagnostic);
 						}
-						diagnostics.push(nestedBracelessObjectDiagnostic);
 					}
 				}
 			}

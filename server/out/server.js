@@ -322,17 +322,19 @@ async function validateTextDocument(textDocument) {
             // Check nested braceless object
             if (settings.checkNestedBracelessObjects) {
                 if (tokenResult.value.jsonType === json_token_type_1.default.StartObject) {
-                    if (textDocumentText.at(jsonhReader.charCounter - 1) !== '{') {
-                        const nestedBracelessObjectDiagnostic = {
-                            severity: node_1.DiagnosticSeverity.Warning,
-                            range: {
-                                start: textDocument.positionAt(startTokenCharCounter),
-                                end: textDocument.positionAt(jsonhReader.charCounter),
-                            },
-                            message: `Braceless objects should only be used at the root level`,
-                            source: 'JSONH',
-                        };
-                        diagnostics.push(nestedBracelessObjectDiagnostic);
+                    if (currentElements.length > 1) {
+                        if (textDocumentText.at(jsonhReader.charCounter - 1) !== '{') {
+                            const nestedBracelessObjectDiagnostic = {
+                                severity: node_1.DiagnosticSeverity.Warning,
+                                range: {
+                                    start: textDocument.positionAt(startTokenCharCounter),
+                                    end: textDocument.positionAt(jsonhReader.charCounter),
+                                },
+                                message: `Braceless objects should only be used at the root level`,
+                                source: 'JSONH',
+                            };
+                            diagnostics.push(nestedBracelessObjectDiagnostic);
+                        }
                     }
                 }
             }
