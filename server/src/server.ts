@@ -1,6 +1,3 @@
-import { promises as fs } from 'fs';
-import path from 'path';
-
 import {
 	createConnection,
 	TextDocuments,
@@ -23,12 +20,9 @@ import {
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
-import { URI } from 'vscode-uri';
-
 import JsonhReader from 'jsonh-ts/build/jsonh-reader';
 import JsonhReaderOptions from 'jsonh-ts/build/jsonh-reader-options';
 import JsonhVersion from 'jsonh-ts/build/jsonh-version';
-import JsonhToken from 'jsonh-ts/build/jsonh-token';
 import JsonTokenType from 'jsonh-ts/build/json-token-type';
 import JsonhNumberParser from 'jsonh-ts/build/jsonh-number-parser';
 import Result from 'jsonh-ts/build/result';
