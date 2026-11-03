@@ -23,13 +23,11 @@ JsonhVscode is a syntax highlighter for [JSONH V2](https://github.com/jsonh-org/
 - JSONH language server:
   - Displays errors with error messages
   - Displays warnings for duplicate properties
-  - Displays warnings for invalid schema according to `$schema` property
   - View JSON preview in side window
 
 ## Dependencies
 
 - [jsonh-org/JsonhTs](https://github.com/jsonh-org/JsonhTs)
-- [ajv-validator/ajv](https://github.com/ajv-validator/ajv)
 
 ## Known Issues
 

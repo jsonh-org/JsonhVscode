@@ -70,26 +70,19 @@
           "description": "Sets the JSONH language version.",
           "order": 1
         },
-        "jsonhLanguageServer.enableSchemaValidation": {
-          "scope": "resource",
-          "type": "boolean",
-          "default": true,
-          "description": "Whether to enable JSON schema validation with a \"$schema\" property in trusted workspaces.",
-          "order": 2
-        },
         "jsonhLanguageServer.checkDuplicateProperties": {
           "scope": "resource",
           "type": "boolean",
           "default": true,
           "description": "Whether to enable duplicate property warnings.",
-          "order": 3
+          "order": 2
         },
         "jsonhLanguageServer.checkNestedBracelessObjects": {
           "scope": "resource",
           "type": "boolean",
           "default": true,
           "description": "Whether to enable nested braceless object warnings.",
-          "order": 4
+          "order": 3
         }
       }
     },

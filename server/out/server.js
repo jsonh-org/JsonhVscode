@@ -3,18 +3,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const fs_1 = require("fs");
-const path_1 = __importDefault(require("path"));
 const node_1 = require("vscode-languageserver/node");
 const vscode_languageserver_textdocument_1 = require("vscode-languageserver-textdocument");
-const vscode_uri_1 = require("vscode-uri");
 const jsonh_reader_1 = __importDefault(require("jsonh-ts/build/jsonh-reader"));
 const jsonh_reader_options_1 = __importDefault(require("jsonh-ts/build/jsonh-reader-options"));
 const jsonh_version_1 = __importDefault(require("jsonh-ts/build/jsonh-version"));
 const json_token_type_1 = __importDefault(require("jsonh-ts/build/json-token-type"));
 const jsonh_number_parser_1 = __importDefault(require("jsonh-ts/build/jsonh-number-parser"));
 const result_1 = __importDefault(require("jsonh-ts/build/result"));
-const ajv_1 = require("ajv");
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
 const connection = (0, node_1.createConnection)(node_1.ProposedFeatures.all);
@@ -61,7 +57,6 @@ connection.onInitialized(() => {
 const defaultSettings = {
     enable: true,
     jsonhVersion: "Latest",
-    enableSchemaValidation: true,
     checkDuplicateProperties: true,
     checkNestedBracelessObjects: true,
 };
@@ -158,10 +153,6 @@ async function validateTextDocument(textDocument) {
         currentElements.push(element);
     };
     const parseElement = function () {
-        // Track schema
-        let schemaIsCurrentProperty = false;
-        let schemaPropertyNameRange = undefined;
-        let schemaPropertyValue = undefined;
         // Read each JsonhToken
         for (const tokenResult of jsonhReader.readElement()) {
             // Check read error
@@ -177,14 +168,14 @@ async function validateTextDocument(textDocument) {
                     source: 'JSONH',
                 };
                 diagnostics.push(readErrorDiagnostic);
-                return { result: result_1.default.fromError(new Error()) };
+                return result_1.default.fromError(new Error());
             }
             switch (tokenResult.value.jsonType) {
                 // Null
                 case json_token_type_1.default.Null: {
                     const element = null;
                     if (submitElement(element)) {
-                        return { result: result_1.default.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
+                        return result_1.default.fromValue(element);
                     }
                     break;
                 }
@@ -192,7 +183,7 @@ async function validateTextDocument(textDocument) {
                 case json_token_type_1.default.True: {
                     const element = true;
                     if (submitElement(element)) {
-                        return { result: result_1.default.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
+                        return result_1.default.fromValue(element);
                     }
                     break;
                 }
@@ -200,7 +191,7 @@ async function validateTextDocument(textDocument) {
                 case json_token_type_1.default.False: {
                     const element = false;
                     if (submitElement(element)) {
-                        return { result: result_1.default.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
+                        return result_1.default.fromValue(element);
                     }
                     break;
                 }
@@ -208,7 +199,7 @@ async function validateTextDocument(textDocument) {
                 case json_token_type_1.default.String: {
                     const element = tokenResult.value.value;
                     if (submitElement(element)) {
-                        return { result: result_1.default.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
+                        return result_1.default.fromValue(element);
                     }
                     break;
                 }
@@ -227,11 +218,11 @@ async function validateTextDocument(textDocument) {
                             source: 'JSONH',
                         };
                         diagnostics.push(numberParseErrorDiagnostic);
-                        return { result: result_1.default.fromError(new Error()) };
+                        return result_1.default.fromError(new Error());
                     }
                     const element = result.value;
                     if (submitElement(element)) {
-                        return { result: result_1.default.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
+                        return result_1.default.fromValue(element);
                     }
                     break;
                 }
@@ -256,7 +247,7 @@ async function validateTextDocument(textDocument) {
                     }
                     // Root element
                     else {
-                        return { result: result_1.default.fromValue(currentElements.at(-1)), schemaPropertyValue, schemaPropertyNameRange };
+                        return result_1.default.fromValue(currentElements.at(-1));
                     }
                     break;
                 }
@@ -272,31 +263,6 @@ async function validateTextDocument(textDocument) {
                 // Not Implemented
                 default: {
                     throw new Error("Token type not implemented");
-                }
-            }
-            // Schema validation
-            if (settings.enableSchemaValidation) {
-                switch (tokenResult.value.jsonType) {
-                    // Property Name
-                    case json_token_type_1.default.PropertyName: {
-                        if (currentElements.length === 1 && tokenResult.value.value === "$schema") {
-                            schemaIsCurrentProperty = true;
-                            schemaPropertyNameRange = { start: startTokenCharCounter, end: jsonhReader.charCounter };
-                        }
-                        break;
-                    }
-                    // Primitive value
-                    case json_token_type_1.default.Null:
-                    case json_token_type_1.default.True:
-                    case json_token_type_1.default.False:
-                    case json_token_type_1.default.String:
-                    case json_token_type_1.default.Number: {
-                        if (schemaIsCurrentProperty) {
-                            schemaPropertyValue = tokenResult.value;
-                        }
-                        schemaIsCurrentProperty = false;
-                        break;
-                    }
                 }
             }
             // Check duplicate property name
@@ -353,12 +319,12 @@ async function validateTextDocument(textDocument) {
             source: 'JSONH',
         };
         diagnostics.push(endOfInputErrorDiagnostic);
-        return { result: result_1.default.fromError(new Error()) };
+        return result_1.default.fromError(new Error());
     };
     // Parse element
-    const parseResult = parseElement();
+    let parseResult = parseElement();
     // Ensure exactly one element
-    if (parseResult.result.isValue) {
+    if (parseResult.isValue) {
         if (jsonhReader.options.parseSingleElement) {
             for (const token of jsonhReader.readEndOfElements()) {
                 if (token.isError) {
@@ -372,61 +338,8 @@ async function validateTextDocument(textDocument) {
                         source: 'JSONH',
                     };
                     diagnostics.push(endOfElementsErrorDiagnostic);
-                    parseResult.result = result_1.default.fromError(new Error());
+                    parseResult = result_1.default.fromError(new Error());
                 }
-            }
-        }
-    }
-    // Validate schema
-    if (settings.enableSchemaValidation && isWorkspaceTrusted) {
-        if (parseResult.result.isValue && parseResult.schemaPropertyValue !== undefined && parseResult.schemaPropertyNameRange !== undefined) {
-            try {
-                // Ensure schema is string
-                if (parseResult.schemaPropertyValue.jsonType !== json_token_type_1.default.String) {
-                    throw new Error("Schema URI must be string");
-                }
-                // Fetch schema and parse as object
-                async function fetchSchema(source) {
-                    // Web URL
-                    if (source.startsWith("http:") || source.startsWith("https:")) {
-                        const schemaResponse = await fetch(source);
-                        const schemaText = await schemaResponse.text();
-                        return schemaText;
-                    }
-                    // File
-                    else {
-                        const schemaPath = path_1.default.resolve(path_1.default.dirname(vscode_uri_1.URI.parse(textDocument.uri).fsPath), source);
-                        const schemaText = await fs_1.promises.readFile(schemaPath, { encoding: "utf8" });
-                        return schemaText;
-                    }
-                }
-                let schemaObject;
-                try {
-                    const schemaText = await fetchSchema(parseResult.schemaPropertyValue.value);
-                    schemaObject = JSON.parse(schemaText);
-                }
-                catch (error) {
-                    throw new Error(`Failed to fetch schema: ${error}`);
-                }
-                // Validate element against schena
-                const avj = new ajv_1.Ajv();
-                const isValid = avj.validate(schemaObject, parseResult.result.value);
-                if (!isValid) {
-                    throw new Error(`Failed schema validation: ${avj.errorsText()}`);
-                }
-            }
-            catch (error) {
-                // Report schema error
-                const schemaErrorDiagnostic = {
-                    severity: node_1.DiagnosticSeverity.Warning,
-                    range: {
-                        start: textDocument.positionAt(parseResult.schemaPropertyNameRange.start),
-                        end: textDocument.positionAt(parseResult.schemaPropertyNameRange.end),
-                    },
-                    message: error instanceof Error ? error.message : `${error}`,
-                    source: 'JSONH',
-                };
-                diagnostics.push(schemaErrorDiagnostic);
             }
         }
     }

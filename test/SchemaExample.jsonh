@@ -1,8 +1,0 @@
-{
-    $schema: "SchemaExampleSchema.json"
-
-    locality: "Tokyo"
-    region: "Kantō"
-    country-name: "Japan"
-    postal-code: "000000"
-}

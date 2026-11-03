@@ -33,8 +33,6 @@ import JsonTokenType from 'jsonh-ts/build/json-token-type';
 import JsonhNumberParser from 'jsonh-ts/build/jsonh-number-parser';
 import Result from 'jsonh-ts/build/result';
 
-import { Ajv } from 'ajv';
-
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
 const connection = createConnection(ProposedFeatures.all);
@@ -93,7 +91,6 @@ connection.onInitialized(() => {
 interface JsonhLspSettings {
 	enable: boolean;
 	jsonhVersion: string;
-	enableSchemaValidation: boolean;
 	checkDuplicateProperties: boolean;
 	checkNestedBracelessObjects: boolean;
 }
@@ -102,7 +99,6 @@ interface JsonhLspSettings {
 const defaultSettings: JsonhLspSettings = {
 	enable: true,
 	jsonhVersion: "Latest",
-	enableSchemaValidation: true,
 	checkDuplicateProperties: true,
 	checkNestedBracelessObjects: true,
 };
@@ -210,16 +206,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 		submitElement(element);
 		currentElements.push(element);
 	};
-	const parseElement = function (): {
-		result: Result<unknown>;
-		schemaPropertyValue?: JsonhToken | undefined;
-		schemaPropertyNameRange?: { start: number, end: number } | undefined;
-	} {
-		// Track schema
-		let schemaIsCurrentProperty: boolean = false;
-		let schemaPropertyNameRange: { start: number, end: number } | undefined = undefined;
-		let schemaPropertyValue: JsonhToken | undefined = undefined;
-
+	const parseElement = function (): Result<unknown> {
 		// Read each JsonhToken
 		for (const tokenResult of jsonhReader.readElement()) {
 			// Check read error
@@ -235,7 +222,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 					source: 'JSONH',
 				}
 				diagnostics.push(readErrorDiagnostic);
-				return { result: Result.fromError(new Error()) };
+				return Result.fromError(new Error());
 			}
 
 			switch (tokenResult.value.jsonType) {
@@ -243,7 +230,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 				case JsonTokenType.Null: {
 					const element: null = null;
 					if (submitElement(element)) {
-						return { result: Result.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
+						return Result.fromValue(element);
 					}
 					break;
 				}
@@ -251,7 +238,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 				case JsonTokenType.True: {
 					const element: boolean = true;
 					if (submitElement(element)) {
-						return { result: Result.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
+						return Result.fromValue(element);
 					}
 					break;
 				}
@@ -259,7 +246,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 				case JsonTokenType.False: {
 					const element: boolean = false;
 					if (submitElement(element)) {
-						return { result: Result.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
+						return Result.fromValue(element);
 					}
 					break;
 				}
@@ -267,7 +254,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 				case JsonTokenType.String: {
 					const element: string = tokenResult.value.value;
 					if (submitElement(element)) {
-						return { result: Result.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
+						return Result.fromValue(element);
 					}
 					break;
 				}
@@ -286,11 +273,11 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 							source: 'JSONH',
 						}
 						diagnostics.push(numberParseErrorDiagnostic);
-						return { result: Result.fromError(new Error()) };
+						return Result.fromError(new Error());
 					}
 					const element: number = result.value;
 					if (submitElement(element)) {
-						return { result: Result.fromValue(element), schemaPropertyValue, schemaPropertyNameRange };
+						return Result.fromValue(element);
 					}
 					break;
 				}
@@ -315,7 +302,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 					}
 					// Root element
 					else {
-						return { result: Result.fromValue(currentElements.at(-1)), schemaPropertyValue, schemaPropertyNameRange };
+						return Result.fromValue(currentElements.at(-1));
 					}
 					break;
 				}
@@ -331,32 +318,6 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 				// Not Implemented
 				default: {
 					throw new Error("Token type not implemented");
-				}
-			}
-
-			// Schema validation
-			if (settings.enableSchemaValidation) {
-				switch (tokenResult.value.jsonType) {
-					// Property Name
-					case JsonTokenType.PropertyName: {
-						if (currentElements.length === 1 && tokenResult.value.value === "$schema") {
-							schemaIsCurrentProperty = true;
-							schemaPropertyNameRange = { start: startTokenCharCounter, end: jsonhReader.charCounter };
-						}
-						break;
-					}
-					// Primitive value
-					case JsonTokenType.Null:
-					case JsonTokenType.True:
-					case JsonTokenType.False:
-					case JsonTokenType.String:
-					case JsonTokenType.Number: {
-						if (schemaIsCurrentProperty) {
-							schemaPropertyValue = tokenResult.value;
-						}
-						schemaIsCurrentProperty = false;
-						break;
-					}
 				}
 			}
 
@@ -417,13 +378,13 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 			source: 'JSONH',
 		}
 		diagnostics.push(endOfInputErrorDiagnostic);
-		return { result: Result.fromError(new Error()) };
+		return Result.fromError(new Error());
 	}
 
 	// Parse element
-	const parseResult = parseElement();
+	let parseResult: Result<unknown> = parseElement();
 	// Ensure exactly one element
-	if (parseResult.result.isValue) {
+	if (parseResult.isValue) {
 		if (jsonhReader.options.parseSingleElement) {
 			for (const token of jsonhReader.readEndOfElements()) {
 				if (token.isError) {
@@ -437,64 +398,8 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 						source: 'JSONH',
 					}
 					diagnostics.push(endOfElementsErrorDiagnostic);
-					parseResult.result = Result.fromError(new Error());
+					parseResult = Result.fromError(new Error());
 				}
-			}
-		}
-	}
-
-	// Validate schema
-	if (settings.enableSchemaValidation && isWorkspaceTrusted) {
-		if (parseResult.result.isValue && parseResult.schemaPropertyValue !== undefined && parseResult.schemaPropertyNameRange !== undefined) {
-			try {
-				// Ensure schema is string
-				if (parseResult.schemaPropertyValue.jsonType !== JsonTokenType.String) {
-					throw new Error("Schema URI must be string");
-				}
-
-				// Fetch schema and parse as object
-				async function fetchSchema(source: string): Promise<string> {
-					// Web URL
-					if (source.startsWith("http:") || source.startsWith("https:")) {
-						const schemaResponse: Response = await fetch(source);
-						const schemaText: string = await schemaResponse.text();
-						return schemaText;
-					}
-					// File
-					else {
-						const schemaPath: string = path.resolve(path.dirname(URI.parse(textDocument.uri).fsPath), source);
-						const schemaText: string = await fs.readFile(schemaPath, { encoding: "utf8" });
-						return schemaText;
-					}
-				}
-				let schemaObject: any;
-				try {
-					const schemaText: string = await fetchSchema(parseResult.schemaPropertyValue.value);
-					schemaObject = JSON.parse(schemaText);
-				}
-				catch (error: unknown) {
-					throw new Error(`Failed to fetch schema: ${error}`);
-				}
-
-				// Validate element against schena
-				const avj = new Ajv();
-				const isValid = avj.validate(schemaObject, parseResult.result.value);
-				if (!isValid) {
-					throw new Error(`Failed schema validation: ${avj.errorsText()}`);
-				}
-			}
-			catch (error: unknown) {
-				// Report schema error
-				const schemaErrorDiagnostic: Diagnostic = {
-					severity: DiagnosticSeverity.Warning,
-					range: {
-						start: textDocument.positionAt(parseResult.schemaPropertyNameRange.start),
-						end: textDocument.positionAt(parseResult.schemaPropertyNameRange.end),
-					},
-					message: error instanceof Error ? error.message : `${error}`,
-					source: 'JSONH',
-				}
-				diagnostics.push(schemaErrorDiagnostic);
 			}
 		}
 	}
