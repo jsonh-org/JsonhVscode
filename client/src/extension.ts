@@ -153,12 +153,6 @@ export function activate(context: vscode.ExtensionContext): void {
 		client.start();
 	}
 
-	// Register workspace trust changed notification
-	client.sendNotification('jsonh/workspaceTrustChanged', { isWorkspaceTrusted: vscode.workspace.isTrusted });
-	vscode.workspace.onDidGrantWorkspaceTrust(() => {
-		client?.sendNotification('jsonh/workspaceTrustChanged', { isWorkspaceTrusted: vscode.workspace.isTrusted });
-	});
-
 	// Register JSON Preview command
 	context.subscriptions.push(vscode.commands.registerCommand('jsonh.previewJson', openJsonPreview));
 	// Update JSON Preview on document change

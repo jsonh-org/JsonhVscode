@@ -37,8 +37,6 @@ const documents = new TextDocuments(TextDocument);
 let hasConfigurationCapability: boolean = false;
 let hasWorkspaceFolderCapability: boolean = false;
 
-let isWorkspaceTrusted: boolean = false;
-
 connection.onInitialize((params: InitializeParams) => {
 	const capabilities: ClientCapabilities = params.capabilities;
 
@@ -415,10 +413,6 @@ connection.onCompletionResolve(
 		return item;
 	}
 );
-
-connection.onNotification('jsonh/workspaceTrustChanged', (params: { isWorkspaceTrusted: boolean }) => {
-	isWorkspaceTrusted = params.isWorkspaceTrusted === true;
-});
 
 connection.onRequest('jsonh/previewJson', async (params: { uri: string }): Promise<string> => {
 	// Get document
